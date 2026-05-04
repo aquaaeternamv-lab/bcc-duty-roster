@@ -296,13 +296,43 @@ html { -webkit-text-size-adjust: 100%; }
   .kpi-label { font-size: 10px; letter-spacing: 0.06em; }
   .kpi-card { padding-left: 10px; }
 
-  /* Tables: scroll horizontally inside the card */
-  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; width: 100%; }
-  thead, tbody { display: table; width: 100%; min-width: 520px; }
-  th, td { padding: 10px 12px; font-size: 13px; }
-  th { font-size: 10.5px; }
-  /* Avatar+name cell wraps cleanly */
-  td .av { width: 26px; height: 26px; font-size: 10px; }
+  /* Tables: convert to stacked card-rows on mobile (no horizontal scroll) */
+  .card { overflow: hidden; } /* clip any table overflow inside card */
+  table { display: block; width: 100%; border: 0; }
+  thead { display: none; } /* labels handled per-cell via data-label */
+  tbody, tfoot { display: block; }
+  tr { display: block; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; transition: none; }
+  tr:hover { background: var(--surface-2); }
+  tr:last-child { margin-bottom: 0; }
+  td {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border: 0; gap: 12px;
+    white-space: normal; text-align: right; font-size: 13.5px; min-height: 0;
+  }
+  td:before {
+    content: attr(data-label);
+    color: var(--muted); font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    flex: 0 0 auto; text-align: left;
+  }
+  td:first-child {
+    display: block; text-align: left;
+    font-size: 15px; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px; margin-bottom: 6px;
+  }
+  td:first-child:before { display: none; }
+  td:last-child { padding-bottom: 0; }
+  td .av { width: 30px; height: 30px; font-size: 11px; }
+  /* Action button cell: stack buttons full-width */
+  td:has(button) { justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+  td button { padding: 8px 14px; font-size: 12.5px; min-height: 36px; }
+
+  /* Tabs: right-edge fade hint for scrollability */
+  nav.tabs {
+    -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+  }
 
   /* Inputs: 16px stops iOS auto-zoom on focus; bigger touch targets */
   input, select, textarea { font-size: 16px; padding: 12px; min-height: 44px; }
@@ -342,6 +372,9 @@ html { -webkit-text-size-adjust: 100%; }
     grid-template-columns: 100px repeat(7, 86px);
     overflow-x: auto; -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
+    /* Right-edge fade to hint scrollability */
+    -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(to right, black 0, black calc(100% - 18px), transparent 100%);
   }
   .roster-grid > div { padding: 8px 6px; font-size: 11px; min-height: 56px; }
   .roster-grid .head { font-size: 10.5px; }
@@ -728,6 +761,19 @@ function toast(msg, kind = 'info', ms = 3500) {
 }
 function showError(msg) { toast(msg, 'error'); }
 function showSuccess(msg) { toast(msg, 'success'); }
+
+/* Auto-label table cells with their column header text — drives mobile stacked-card view */
+function enrichTablesForMobile(root) {
+  (root || document).querySelectorAll('table').forEach(t => {
+    const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    if (!heads.length) return;
+    t.querySelectorAll('tbody tr').forEach(tr => {
+      [...tr.children].forEach((td, i) => {
+        if (heads[i] && !td.hasAttribute('data-label')) td.setAttribute('data-label', heads[i]);
+      });
+    });
+  });
+}
 
 /* Animated number counter — Emil: short, ease-out (300ms feels fast yet noticeable) */
 function animateCounter(elNode, target, duration = 600) {
@@ -1529,6 +1575,7 @@ async function render() {
     const view = await fn();
     main.innerHTML = '';
     main.append(view);
+    enrichTablesForMobile(main);
   } catch (e) {
     main.innerHTML = '';
     main.append(el('div', { class: 'card' }, el('div', { class: 'err' }, 'Error: ' + e.message)));
