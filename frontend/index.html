@@ -3,66 +3,544 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>BCC Duty & Roster</title>
+<meta name="theme-color" content="#fafaf7" />
+<title>BCC — Duty & Roster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0b0f17; --panel:#121826; --panel2:#1a2236; --border:#222b40;
-    --text:#e7ecf3; --muted:#8a96ad; --accent:#d4af37; --accent2:#b58e1a;
-    --green:#2ecc71; --red:#ff5a5f; --yellow:#f1c40f; --blue:#3498db;
+:root {
+  /* BCC corporate palette — clean, professional, light */
+  --bg: #f7f8fa;
+  --bg-tint: #eef0f4;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --border: #e4e7ec;
+  --border-strong: #cfd4dc;
+
+  --text: #0f172a;       /* near-black, BCC corporate */
+  --text-2: #334155;
+  --muted: #64748b;
+  --faint: #94a3b8;
+
+  /* Primary = BCC blue from the logo */
+  --accent: #1f74c4;
+  --accent-soft: #e6f0fb;
+  --accent-strong: #155a9c;
+
+  /* Brand multi-colour set from the BCC logo mark */
+  --bcc-red: #e63946;
+  --bcc-red-soft: #fde7e9;
+  --bcc-yellow: #f4c430;
+  --bcc-yellow-soft: #fdf4d3;
+  --bcc-blue: #1f74c4;
+  --bcc-blue-soft: #e6f0fb;
+  --bcc-green: #5ba642;
+  --bcc-green-soft: #ebf5e6;
+
+  /* Status (mapped to brand where it makes sense) */
+  --green: #5ba642;
+  --red: #e63946;
+  --amber: #d4a017;
+  --blue: #1f74c4;
+  --gold: #d4a017;
+  --gold-soft: #fdf4d3;
+
+  --shadow-sm: 0 1px 2px rgba(28,25,23,.04), 0 1px 1px rgba(28,25,23,.03);
+  --shadow: 0 1px 3px rgba(28,25,23,.05), 0 4px 12px rgba(28,25,23,.04);
+  --shadow-lg: 0 4px 12px rgba(28,25,23,.06), 0 24px 48px rgba(28,25,23,.08);
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+
+  --t: cubic-bezier(.4,0,.2,1);
+  --tt: 200ms var(--t);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; min-height: 100vh;
+  background: var(--bg); color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-feature-settings: 'cv11','ss01','ss03','cv02';
+  font-size: 14px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(31,116,196,0.04) 0%, transparent 35%),
+    radial-gradient(circle at 100% 0%, rgba(91,166,66,0.04) 0%, transparent 35%);
+  background-attachment: fixed;
+}
+
+/* Type — Inter, professional weighting throughout */
+h1, h2, h3 { font-family: 'Inter', sans-serif; color: var(--text); margin: 0; font-weight: 700; letter-spacing: -0.02em; }
+h1 { font-size: 26px; line-height: 1.15; letter-spacing: -0.025em; font-weight: 800; }
+h2 { font-size: 20px; line-height: 1.25; letter-spacing: -0.022em; font-weight: 700; }
+h3 { font-size: 15px; line-height: 1.35; font-weight: 700; letter-spacing: -0.012em; }
+.serif { font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: -0.022em; }
+.eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+
+a { color: var(--accent); text-decoration: none; transition: color var(--tt); }
+a:hover { color: var(--accent-strong); }
+
+/* Forms */
+button, input, select, textarea { font: inherit; color: var(--text); }
+button {
+  background: var(--text); color: var(--surface);
+  border: 1px solid var(--text); padding: 10px 18px;
+  border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;
+  transition: all var(--tt);
+  box-shadow: var(--shadow-sm);
+}
+button:hover { background: var(--accent-strong); border-color: var(--accent-strong); transform: translateY(-1px); box-shadow: var(--shadow); }
+button:active { transform: translateY(0); }
+button.secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); box-shadow: none; }
+button.secondary:hover { background: var(--bg-tint); border-color: var(--text-2); transform: none; }
+button.ghost { background: transparent; color: var(--text-2); border-color: transparent; box-shadow: none; padding: 6px 12px; }
+button.ghost:hover { background: var(--bg-tint); color: var(--text); transform: none; box-shadow: none; }
+button.accent { background: var(--accent); border-color: var(--accent); }
+button.accent:hover { background: var(--accent-strong); }
+button.danger { background: var(--surface); color: var(--red); border-color: #f0d6d4; box-shadow: none; }
+button.danger:hover { background: #fbeae8; border-color: #e7b9b5; transform: none; }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+input, select, textarea {
+  background: var(--surface); border: 1px solid var(--border-strong);
+  padding: 10px 12px; border-radius: var(--radius-sm); width: 100%;
+  transition: border-color var(--tt), box-shadow var(--tt);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+}
+label {
+  display: block; margin: 14px 0 6px;
+  color: var(--muted); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+thead th {
+  color: var(--muted); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--surface-2); border-bottom: 1px solid var(--border-strong);
+}
+tbody tr { transition: background var(--tt); }
+tbody tr:hover { background: var(--surface-2); }
+
+/* Layout primitives */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px;
+  margin-bottom: 18px; box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--tt);
+}
+.card:hover { box-shadow: var(--shadow); }
+.card.tight { padding: 16px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+
+.row { display: flex; gap: 14px; flex-wrap: wrap; }
+.row > * { flex: 1; min-width: 200px; }
+.grid { display: grid; gap: 16px; }
+.grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 900px) { .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; } }
+
+/* Pills */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+  background: var(--bg-tint); color: var(--text-2); border: 1px solid var(--border);
+}
+.pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.pill.ok { background: #eaf4ee; color: #0e6b3f; border-color: #c8e3d3; }
+.pill.ok::before { background: var(--green); }
+.pill.warn { background: #fcf3e1; color: #8a5a14; border-color: #f0dfb6; }
+.pill.warn::before { background: var(--amber); }
+.pill.bad { background: #fbeae8; color: #962e25; border-color: #f0c8c4; }
+.pill.bad::before { background: var(--red); }
+.pill.info { background: #e7eff8; color: #2c5282; border-color: #c5d6ea; }
+.pill.info::before { background: var(--blue); }
+.pill.gold { background: var(--gold-soft); color: #735a1d; border-color: #e7d5a7; }
+.pill.gold::before { background: var(--gold); }
+
+/* Header */
+header.top {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 30;
+}
+header.top .brand { display: flex; align-items: center; gap: 12px; }
+header.top .brand-mark { display: grid; place-items: center; }
+header.top .brand-text { display: flex; flex-direction: column; line-height: 1; }
+header.top .brand-text .name { font-family: 'Inter'; font-weight: 800; font-size: 18px; letter-spacing: -0.015em; color: var(--text); }
+header.top .brand-text .tag { font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; color: var(--muted); margin-top: 3px; text-transform: uppercase; }
+header.top h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.005em; color: var(--muted); }
+header.top h1 .accent { color: var(--accent); font-weight: 700; }
+header.top .divider-v { width: 1px; height: 24px; background: var(--border-strong); margin: 0 6px; }
+header.top .user { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 13px; }
+header.top .user .avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  display: grid; place-items: center; font-weight: 600; font-size: 12px;
+}
+
+/* Nav */
+nav.tabs {
+  display: flex; gap: 2px; overflow-x: auto;
+  padding: 0 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+nav.tabs button {
+  background: transparent; color: var(--muted);
+  border: 0; box-shadow: none;
+  padding: 14px 16px; border-radius: 0;
+  white-space: nowrap; font-weight: 500; font-size: 13px;
+  border-bottom: 2px solid transparent;
+  text-transform: capitalize;
+  transition: color var(--tt), border-color var(--tt);
+}
+nav.tabs button:hover { color: var(--text); background: transparent; transform: none; box-shadow: none; }
+nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); background: transparent; }
+nav.tabs select {
+  margin-left: auto; align-self: center; max-width: 220px;
+  border: 1px solid var(--border); padding: 6px 10px; font-size: 13px;
+}
+
+main {
+  padding: 28px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+/* ============ MOBILE OPTIMIZATIONS ============ */
+* { -webkit-tap-highlight-color: rgba(31,116,196,0.12); }
+html { -webkit-text-size-adjust: 100%; }
+
+@media (max-width: 720px) {
+  /* Header: lean — drop the corp tagline + page subtitle on phones */
+  header.top {
+    padding: 10px 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
   }
-  *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
-  a{color:var(--accent);text-decoration:none}
-  button,input,select,textarea{font:inherit;color:var(--text)}
-  button{background:var(--accent);color:#000;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
-  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
-  button.danger{background:var(--red);color:#fff}
-  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  input,select,textarea{background:var(--panel2);border:1px solid var(--border);padding:8px 10px;border-radius:6px;width:100%}
-  label{display:block;margin:8px 0 4px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
-  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
-  .row{display:flex;gap:12px;flex-wrap:wrap}
-  .row > *{flex:1;min-width:200px}
-  .grid{display:grid;gap:14px}
-  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
-  .grid.cols-4{grid-template-columns:repeat(4,1fr)}
-  @media(max-width:800px){.grid.cols-3,.grid.cols-4{grid-template-columns:1fr 1fr}}
-  @media(max-width:520px){.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--panel2);border:1px solid var(--border);color:var(--muted)}
-  .pill.ok{background:#0f3a25;color:#7be0a8;border-color:#155534}
-  .pill.warn{background:#3a2f0f;color:#ffd96a;border-color:#5a4a14}
-  .pill.bad{background:#3a1417;color:#ff8c92;border-color:#5a1d22}
-  .pill.info{background:#0f2a3a;color:#8ec9f0;border-color:#16415c}
-  header.top{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-  header.top h1{margin:0;font-size:16px;letter-spacing:.04em}
-  header.top h1 span{color:var(--accent)}
-  nav.tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 18px;background:var(--panel);border-bottom:1px solid var(--border)}
-  nav.tabs button{background:transparent;color:var(--muted);border:0;padding:8px 14px;border-radius:6px;white-space:nowrap;font-weight:500}
-  nav.tabs button.active{background:var(--panel2);color:var(--accent)}
-  main{padding:18px;max-width:1400px;margin:0 auto}
-  .empty{padding:30px;text-align:center;color:var(--muted)}
-  .kpi{font-size:28px;font-weight:700;color:var(--accent)}
-  .kpi-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-  .login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#0b0f17 0%, #1a2236 100%)}
-  .login .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-  .login h2{margin:0 0 4px;font-size:24px}
-  .login p{margin:0 0 24px;color:var(--muted)}
-  .err{background:#3a1417;color:#ff8c92;border:1px solid #5a1d22;padding:8px 12px;border-radius:6px;margin:10px 0;font-size:13px}
-  .ok-msg{background:#0f3a25;color:#7be0a8;border:1px solid #155534;padding:8px 12px;border-radius:6px;margin:10px 0;font-size:13px}
-  .roster-grid{display:grid;grid-template-columns:160px repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:auto}
-  .roster-grid > div{background:var(--panel);padding:8px;font-size:12px;min-height:60px}
-  .roster-grid .head{background:var(--panel2);font-weight:600;text-align:center}
-  .duty-cell{background:#1f2942;border-radius:4px;padding:4px 6px;margin:2px 0;font-size:11px}
-  .duty-cell .who{font-weight:600}
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:50;padding:20px}
-  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:100%;max-height:90vh;overflow:auto}
-  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-  .notif-dot{display:inline-block;width:8px;height:8px;background:var(--red);border-radius:50%;margin-left:4px}
-  .small{font-size:12px;color:var(--muted)}
-  hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+  header.top .brand { gap: 10px; }
+  header.top .brand-text .tag { display: none; }
+  header.top .divider-v, header.top h1 { display: none; }
+  header.top .user span:not(.small) { display: none; }
+  header.top .user .small { display: none; }
+  header.top .user { gap: 8px; }
+
+  /* Nav: bigger touch targets, hide branch selector behind a smaller pill */
+  nav.tabs {
+    padding: 0 10px;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  nav.tabs button { padding: 14px 12px; font-size: 13px; min-height: 44px; scroll-snap-align: start; }
+  nav.tabs select { font-size: 12px; max-width: 140px; padding: 6px 8px; }
+
+  /* Main: safe-area, slimmer padding */
+  main {
+    padding: 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  /* Cards: tighter, less aggressive shadows */
+  .card { padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+  .card.tight { padding: 14px; }
+  .card-head { gap: 8px; margin-bottom: 12px; }
+  .card-head .small { font-size: 10.5px; }
+
+  /* Section heads compress */
+  .section-head { margin-bottom: 14px; }
+  .section-head h2 { font-size: 19px; }
+  .section-head .desc { font-size: 13px; line-height: 1.5; }
+  .eyebrow { font-size: 10px; }
+
+  /* KPI grid: keep 2 columns on phones (override the 560 rule which kicks to 1) */
+  .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi { font-size: 28px; letter-spacing: -0.03em; }
+  .kpi-label { font-size: 10px; letter-spacing: 0.06em; }
+  .kpi-card { padding-left: 10px; }
+
+  /* Tables: scroll horizontally inside the card */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; width: 100%; }
+  thead, tbody { display: table; width: 100%; min-width: 520px; }
+  th, td { padding: 10px 12px; font-size: 13px; }
+  th { font-size: 10.5px; }
+  /* Avatar+name cell wraps cleanly */
+  td .av { width: 26px; height: 26px; font-size: 10px; }
+
+  /* Inputs: 16px stops iOS auto-zoom on focus; bigger touch targets */
+  input, select, textarea { font-size: 16px; padding: 12px; min-height: 44px; }
+  textarea { min-height: 80px; }
+  label { margin: 12px 0 6px; }
+  button { min-height: 44px; padding: 11px 16px; font-size: 14px; }
+  button.ghost { min-height: 40px; padding: 8px 12px; }
+  nav.tabs button { padding: 12px 12px; }
+
+  /* Action buttons in tables: keep them visible without wrapping line */
+  td button { padding: 8px 12px; font-size: 12px; min-height: 36px; }
+
+  /* Modal: bottom-sheet style on phones */
+  .modal-bg { padding: 0; align-items: flex-end; }
+  .modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0;
+    padding: 22px 20px;
+    padding-bottom: max(22px, env(safe-area-inset-bottom));
+    animation: slide-up-mobile 280ms cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes slide-up-mobile { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  /* Drag indicator at top of bottom-sheet */
+  .modal::before {
+    content: ''; display: block;
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--border-strong);
+    margin: -8px auto 14px;
+  }
+  .actions { flex-direction: column-reverse; gap: 8px; }
+  .actions button { width: 100%; }
+
+  /* Roster grid: horizontal scroll with sticky shift column */
+  .roster-grid {
+    grid-template-columns: 100px repeat(7, 86px);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  .roster-grid > div { padding: 8px 6px; font-size: 11px; min-height: 56px; }
+  .roster-grid .head { font-size: 10.5px; }
+  .roster-grid .head > div:nth-child(2) { font-size: 16px !important; }
+  .roster-grid .shift-label { font-size: 12px; position: sticky; left: 0; background: var(--surface); z-index: 1; box-shadow: 1px 0 0 var(--border); }
+  .roster-grid .head:first-child { position: sticky; left: 0; z-index: 2; box-shadow: 1px 0 0 var(--border); }
+  .duty-cell { font-size: 11px; padding: 4px 6px; }
+
+  /* Login: tighter padding */
+  .login { padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .login .box { padding: 28px 22px; }
+  .login h2 { font-size: 20px; }
+  .login .login-brand { gap: 12px; margin-bottom: 18px; }
+  .login .brand-text-block .n { font-size: 20px; }
+  .login .brand-text-block .t { font-size: 9px; }
+  .login .demo-creds { font-size: 11px; padding: 10px 12px; }
+
+  /* Form rows stack */
+  .row > * { min-width: 100%; flex: 1 1 100%; }
+
+  /* Disable expensive bg gradients on mobile for perf */
+  body { background-image: none; }
+  .login { background-image:
+    radial-gradient(circle at 30% 10%, rgba(31,116,196,0.05) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(91,166,66,0.04) 0%, transparent 50%); }
+}
+
+/* Very small phones: 1-col KPIs, even tighter spacing */
+@media (max-width: 380px) {
+  .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
+  .kpi { font-size: 32px; }
+  header.top { padding: 8px 10px; }
+  main { padding: 12px; }
+  .card { padding: 14px; }
+  nav.tabs button { padding: 12px 10px; font-size: 12.5px; }
+}
+
+/* Touch-friendly hover-cancel for non-hover devices */
+@media (hover: none) {
+  button:hover { transform: none; }
+  tbody tr:hover { background: transparent; }
+  .card:hover { box-shadow: var(--shadow-sm); }
+}
+
+/* Empty state */
+.empty {
+  padding: 50px 20px; text-align: center; color: var(--muted);
+  font-style: italic;
+}
+.empty svg { display: block; margin: 0 auto 12px; opacity: .4; }
+
+/* KPI cards */
+.kpi {
+  font-family: 'Inter', sans-serif;
+  font-size: 36px; font-weight: 800; line-height: 1;
+  letter-spacing: -0.035em; color: var(--text);
+  font-feature-settings: 'tnum';
+}
+.kpi.accent { color: var(--accent); }
+.kpi-label {
+  color: var(--muted); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600; margin-top: 8px;
+}
+.kpi-card {
+  position: relative;
+  border-left: 3px solid var(--border);
+  padding-left: 16px;
+}
+.kpi-card.highlight { border-left-color: var(--bcc-blue); }
+.kpi-card.gold { border-left-color: var(--bcc-yellow); }
+.kpi-card.warn { border-left-color: var(--bcc-red); }
+.kpi-card.green { border-left-color: var(--bcc-green); }
+
+/* Login */
+.login {
+  min-height: 100vh; display: grid; place-items: center; padding: 24px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(31,116,196,0.06) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(91,166,66,0.05) 0%, transparent 40%),
+    radial-gradient(circle at 70% 20%, rgba(244,196,48,0.04) 0%, transparent 40%),
+    var(--bg);
+}
+.login .box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 40px;
+  width: 100%; max-width: 420px;
+  box-shadow: var(--shadow-lg);
+}
+.login .login-brand {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 22px;
+}
+.login .brand-text-block { line-height: 1.1; }
+.login .brand-text-block .n { font-weight: 800; font-size: 22px; letter-spacing: -0.025em; color: var(--text); }
+.login .brand-text-block .t { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.login h2 { font-size: 22px; margin-bottom: 4px; font-weight: 700; }
+.login .sub { color: var(--muted); margin: 0 0 28px; font-size: 14px; }
+.login button { width: 100%; margin-top: 18px; padding: 12px; font-weight: 600; }
+.login .demo-creds {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 22px;
+  font-size: 12px; color: var(--text-2); line-height: 1.7;
+}
+.login .demo-creds .eyebrow { margin-bottom: 6px; }
+.login .demo-creds code { background: var(--surface); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--border); font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; }
+
+.err { background: #fbeae8; color: #962e25; border: 1px solid #f0c8c4; padding: 10px 14px; border-radius: var(--radius-sm); margin: 12px 0; font-size: 13px; }
+
+/* Roster grid */
+.roster-grid {
+  display: grid;
+  grid-template-columns: 180px repeat(7, minmax(120px, 1fr));
+  gap: 0;
+  background: var(--border);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 14px;
+}
+.roster-grid > div {
+  background: var(--surface);
+  padding: 10px 12px; font-size: 13px; min-height: 64px;
+}
+.roster-grid > div:not(:last-child) { border-right: 1px solid var(--border); }
+.roster-grid > div { border-bottom: 1px solid var(--border); }
+.roster-grid .head {
+  background: var(--surface-2);
+  font-weight: 600; text-align: center;
+  font-size: 12px; color: var(--text-2);
+  letter-spacing: 0.04em;
+}
+.roster-grid .head.weekend { color: var(--accent); }
+.roster-grid .shift-label { font-weight: 600; }
+.roster-grid .shift-label .small { color: var(--muted); font-weight: 400; font-size: 11px; }
+.duty-cell {
+  background: var(--accent-soft); color: var(--accent-strong);
+  border-radius: var(--radius-sm); padding: 5px 8px;
+  margin: 3px 0; font-size: 12px; font-weight: 500;
+  border: 1px solid #d4e6dc;
+  transition: all var(--tt);
+}
+.duty-cell:hover { background: #d8e8e0; border-color: #b8d4c5; }
+
+/* Modal */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(28,25,23,0.4);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: grid; place-items: center; z-index: 50; padding: 20px;
+  animation: fade-in 200ms var(--t);
+}
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 28px;
+  max-width: 520px; width: 100%; max-height: 90vh; overflow: auto;
+  box-shadow: var(--shadow-lg);
+  animation: slide-up 250ms var(--t);
+}
+.modal h3 { margin-bottom: 4px; font-size: 20px; }
+.modal .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+.actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
+
+/* Animations */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fade-in 250ms var(--t); }
+
+/* Misc */
+.small { font-size: 12px; color: var(--muted); }
+.divider { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+.spinner {
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 700ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.center-loader { display: grid; place-items: center; padding: 60px; }
+
+/* Hospitality flourish — subtle decoration */
+.subtle-deco::before {
+  content: '';
+  display: block; width: 32px; height: 1px;
+  background: var(--gold); margin-bottom: 14px;
+}
+
+/* Badge / chip */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: 12px; color: var(--text-2);
+}
+
+/* Avatar */
+.av {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  display: inline-grid; place-items: center; font-size: 11px; font-weight: 600;
+  margin-right: 8px; vertical-align: middle;
+}
+.av.gold { background: var(--gold-soft); color: var(--gold); }
+
+/* Section header with eyebrow */
+.section-head { margin-bottom: 22px; }
+.section-head .eyebrow { margin-bottom: 6px; display: block; }
+.section-head h2 { margin-bottom: 4px; }
+.section-head .desc { color: var(--muted); font-size: 14px; }
+
+/* Hover transitions on interactive */
+button, a, input, select, textarea, .duty-cell, .pill { cursor: default; }
+button, a, .duty-cell { cursor: pointer; }
+
+/* Selection */
+::selection { background: var(--accent-soft); color: var(--accent-strong); }
 </style>
 </head>
 <body>
@@ -70,9 +548,9 @@
 
 <script>
 /* ============================================================
-   BCC Duty & Roster — Vanilla SPA
-   ============================================================ */
-const API = (location.port === '4001' || location.hostname === 'localhost') ? '/api' : '/api';
+   BCC Duty & Roster — Vanilla SPA (light theme, premium minimal)
+============================================================ */
+const API = '/api';
 
 const State = {
   user: null,
@@ -84,14 +562,13 @@ const State = {
   modal: null,
 };
 
-/* -------------------- API helper -------------------- */
+/* -------------------- API -------------------- */
 async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
   if (State.token) headers.Authorization = `Bearer ${State.token}`;
   const r = await fetch(API + path, { ...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
   if (r.status === 401 && State.refresh && path !== '/auth/refresh') {
-    const ok = await tryRefresh();
-    if (ok) return api(path, opts);
+    if (await tryRefresh()) return api(path, opts);
     logout();
   }
   if (r.status === 204) return null;
@@ -129,6 +606,7 @@ const el = (tag, attrs = {}, ...kids) => {
   for (const k in attrs) {
     if (k === 'class') n.className = attrs[k];
     else if (k.startsWith('on')) n.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+    else if (k === 'html') n.innerHTML = attrs[k];
     else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k]);
   }
   kids.flat().forEach(k => { if (k == null || k === false) return; n.append(k.nodeType ? k : document.createTextNode(k)); });
@@ -137,25 +615,70 @@ const el = (tag, attrs = {}, ...kids) => {
 const fmtDate = (d) => new Date(d).toISOString().slice(0, 10);
 const fmtTime = (d) => new Date(d).toISOString().slice(11, 16);
 const fmtDateTime = (d) => `${fmtDate(d)} ${fmtTime(d)}`;
+const niceDate = (d) => new Date(d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 function mondayOf(d = new Date()) { const x = new Date(d); const dow = (x.getDay() + 6) % 7; x.setDate(x.getDate() - dow); x.setHours(0,0,0,0); return x; }
 function showModal(content) { State.modal = content; render(); }
 function closeModal() { State.modal = null; render(); }
 function showError(msg) { alert(msg); }
+function initials(name) { return (name || '').split(' ').map(s => s[0]).filter(Boolean).slice(0,2).join('').toUpperCase(); }
+
+/* BCC logo mark — 4 interlocking quadrants (red, yellow, blue, green) */
+function BccMark(size = 36) {
+  const span = document.createElement('span');
+  span.style.cssText = `display:inline-flex;width:${size}px;height:${size}px;`;
+  span.innerHTML = `
+    <svg viewBox="0 0 64 64" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-label="BCC">
+      <!-- top-left red -->
+      <path d="M30 4 H10 a6 6 0 0 0 -6 6 V30 a6 6 0 0 0 6 6 h6 V20 a6 6 0 0 1 6 -6 h8 Z" fill="#e63946"/>
+      <!-- top-right yellow -->
+      <path d="M34 4 H54 a6 6 0 0 1 6 6 V30 a6 6 0 0 1 -6 6 h-6 V20 a6 6 0 0 0 -6 -6 h-8 Z" fill="#f4c430"/>
+      <!-- bottom-left blue -->
+      <path d="M30 60 H10 a6 6 0 0 1 -6 -6 V34 a6 6 0 0 1 6 -6 h6 V44 a6 6 0 0 0 6 6 h8 Z" fill="#1f74c4"/>
+      <!-- bottom-right green -->
+      <path d="M34 60 H54 a6 6 0 0 0 6 -6 V34 a6 6 0 0 0 -6 -6 h-6 V44 a6 6 0 0 1 -6 6 h-8 Z" fill="#5ba642"/>
+      <!-- inner square mask for the interlocking look -->
+      <rect x="22" y="22" width="20" height="20" rx="4" fill="#ffffff"/>
+    </svg>`;
+  return span;
+}
+
+/* SVG icons (no emoji) */
+const ICON = {
+  calendar: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  users: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  swap: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  moon: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+  plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  download: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  inbox: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+  logout: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+};
+
+const svgIcon = (name) => { const span = document.createElement('span'); span.style.cssText = 'display:inline-flex;align-items:center;'; span.innerHTML = ICON[name] || ''; return span; };
 
 /* -------------------- Login -------------------- */
 function LoginView() {
   const wrap = el('div', { class: 'login' });
-  const box = el('div', { class: 'box' });
+  const box = el('div', { class: 'box fade-in' });
   box.append(
-    el('h2', {}, 'BCC Duty & Roster'),
-    el('p', {}, 'SEED · Authentic Maldives · Creator Hub'),
+    el('div', { class: 'login-brand' },
+      BccMark(48),
+      el('div', { class: 'brand-text-block' },
+        el('div', { class: 'n' }, 'BCC'),
+        el('div', { class: 't' }, 'Business Center Corporation'),
+      ),
+    ),
+    el('h2', {}, 'Duty & Roster'),
+    el('p', { class: 'sub' }, 'Staff scheduling for SEED · Authentic Maldives · Creator Hub'),
   );
   const errBox = el('div');
-  const emailIn = el('input', { type: 'email', placeholder: 'admin@bcc.local', value: 'admin@bcc.local' });
-  const passIn = el('input', { type: 'password', placeholder: 'Password' });
-  const submit = el('button', { style: 'width:100%;margin-top:14px' }, 'Sign in');
-  submit.onclick = async () => {
+  const emailIn = el('input', { type: 'email', placeholder: 'name@bcc.local', value: 'admin@bcc.local', autocomplete: 'username' });
+  const passIn = el('input', { type: 'password', placeholder: 'Your password', autocomplete: 'current-password', value: 'bcc2026' });
+  const submit = el('button', { class: 'accent' }, 'Sign in');
+  const doLogin = async () => {
     submit.disabled = true; errBox.innerHTML = '';
+    submit.innerHTML = ''; submit.append(el('span', { class: 'spinner', style: 'border-color:#5e9080;border-top-color:#fff;width:14px;height:14px' }));
     try {
       const j = await api('/auth/login', { method: 'POST', body: { email: emailIn.value, password: passIn.value } });
       State.token = j.access_token; State.refresh = j.refresh_token; State.user = j.user;
@@ -166,20 +689,29 @@ function LoginView() {
       render();
     } catch (e) {
       errBox.append(el('div', { class: 'err' }, e.message));
-      submit.disabled = false;
+      submit.disabled = false; submit.textContent = 'Sign in';
     }
   };
+  submit.onclick = doLogin;
+  passIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
   box.append(
     el('label', {}, 'Email'), emailIn,
     el('label', {}, 'Password'), passIn,
     errBox, submit,
-    el('p', { class: 'small', style: 'margin-top:18px;text-align:center' }, 'Default: admin@bcc.local / ChangeMe123!'),
+    el('div', { class: 'demo-creds' },
+      el('div', { class: 'eyebrow' }, 'Demo credentials'),
+      el('div', {}, 'Super admin · ', el('code', {}, 'admin@bcc.local')),
+      el('div', {}, 'Branch manager · ', el('code', {}, 'seed-manager@bcc.local')),
+      el('div', {}, 'Staff · ', el('code', {}, 'seed-staff1@bcc.local')),
+      el('div', { style: 'margin-top:8px' }, 'Password (all): ', el('code', {}, 'bcc2026')),
+    ),
   );
   wrap.append(box);
   return wrap;
 }
 
-/* -------------------- Bootstrap data -------------------- */
+/* -------------------- Bootstrap -------------------- */
 async function loadBootstrap() {
   if (!State.user) {
     try { State.user = await api('/auth/me'); } catch { return; }
@@ -194,15 +726,31 @@ const NAV_BY_ROLE = {
   branch_manager: ['dashboard','staff','shifts','roster','swaps','attendance','leaves','payroll'],
   staff:          ['my-roster','my-swaps','my-attendance','leaves'],
 };
+const PAGE_LABELS = {
+  'dashboard': 'Dashboard', 'branches': 'Branches', 'staff': 'Staff', 'shifts': 'Shifts',
+  'roster': 'Roster', 'swaps': 'Swaps', 'attendance': 'Attendance', 'leaves': 'Leaves',
+  'payroll': 'Payroll', 'audit': 'Audit',
+  'my-roster': 'My Roster', 'my-swaps': 'My Swaps', 'my-attendance': 'My Attendance',
+};
 
 function Header() {
   const h = el('header', { class: 'top' });
   h.append(
-    el('h1', {}, 'BCC ', el('span', {}, 'Duty & Roster')),
-    el('div', { style: 'display:flex;gap:8px;align-items:center' },
-      State.user ? el('span', { class: 'small' }, `${State.user.name} · ${State.user.role}`) : null,
-      el('button', { class: 'ghost', onclick: logout }, 'Logout'),
+    el('div', { class: 'brand' },
+      BccMark(34),
+      el('div', { class: 'brand-text' },
+        el('span', { class: 'name' }, 'BCC'),
+        el('span', { class: 'tag' }, 'Business Center Corporation'),
+      ),
+      el('div', { class: 'divider-v' }),
+      el('h1', {}, 'Duty & ', el('span', { class: 'accent' }, 'Roster')),
     ),
+    State.user ? el('div', { class: 'user' },
+      el('span', { class: 'small' }, State.user.role.replace('_', ' ')),
+      el('div', { class: 'av' }, initials(State.user.name)),
+      el('span', {}, State.user.name),
+      el('button', { class: 'ghost', onclick: logout, title: 'Logout' }, svgIcon('logout')),
+    ) : null,
   );
   return h;
 }
@@ -210,13 +758,12 @@ function Nav() {
   const tabs = NAV_BY_ROLE[State.user.role] || [];
   const n = el('nav', { class: 'tabs' });
   tabs.forEach(t => {
-    const b = el('button', { class: State.page === t ? 'active' : '' }, t.replace('-', ' '));
+    const b = el('button', { class: State.page === t ? 'active' : '' }, PAGE_LABELS[t] || t);
     b.onclick = () => { State.page = t; render(); };
     n.append(b);
   });
-  // branch selector for super_admin
   if (State.user.role === 'super_admin' && State.branches.length > 1) {
-    const sel = el('select', { style: 'max-width:220px;margin-left:auto' });
+    const sel = el('select');
     State.branches.forEach(b => sel.append(el('option', { value: b.id, selected: b.id === State.selectedBranchId }, b.name)));
     sel.onchange = () => { State.selectedBranchId = sel.value; localStorage.setItem('bcc_branch', sel.value); render(); };
     n.append(sel);
@@ -224,9 +771,19 @@ function Nav() {
   return n;
 }
 
+function SectionHead(eyebrow, title, desc) {
+  return el('div', { class: 'section-head' },
+    el('span', { class: 'eyebrow' }, eyebrow),
+    el('h2', { class: 'serif' }, title),
+    desc ? el('div', { class: 'desc' }, desc) : null,
+  );
+}
+
 /* -------------------- Pages -------------------- */
 async function PageDashboard() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Overview', 'Today at a glance', 'Live metrics across branches and pending actions awaiting decision.'));
+
   const grid = el('div', { class: 'grid cols-4' });
   try {
     const [staff, swaps, rosters, leaves] = await Promise.all([
@@ -235,22 +792,28 @@ async function PageDashboard() {
       api('/roster' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id)),
       api('/leaves?status=pending'),
     ]);
+    const k = (label, val, cls = 'highlight') => el('div', { class: 'card tight' },
+      el('div', { class: `kpi-card ${cls}` },
+        el('div', { class: 'kpi accent' }, String(val)),
+        el('div', { class: 'kpi-label' }, label),
+      ),
+    );
     grid.append(
-      el('div', { class: 'card' }, el('div', { class: 'kpi' }, staff.length), el('div', { class: 'kpi-label' }, 'Total staff')),
-      el('div', { class: 'card' }, el('div', { class: 'kpi' }, swaps.length), el('div', { class: 'kpi-label' }, 'Pending swaps')),
-      el('div', { class: 'card' }, el('div', { class: 'kpi' }, leaves.length), el('div', { class: 'kpi-label' }, 'Pending leaves')),
-      el('div', { class: 'card' }, el('div', { class: 'kpi' }, rosters.filter(r => r.status === 'published').length), el('div', { class: 'kpi-label' }, 'Published rosters')),
+      k('Total staff', staff.length, 'highlight'),
+      k('Pending swaps', swaps.length, swaps.length ? 'warn' : 'highlight'),
+      k('Pending leaves', leaves.length, leaves.length ? 'warn' : 'highlight'),
+      k('Published rosters', rosters.filter(r => r.status === 'published').length, 'gold'),
     );
   } catch (e) {
     grid.append(el('div', { class: 'card empty' }, 'Could not load dashboard: ' + e.message));
   }
   root.append(grid);
 
-  // recent rosters
   try {
     const rosters = await api('/roster' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id));
-    const card = el('div', { class: 'card' }, el('h3', {}, 'Recent rosters'));
-    if (!rosters.length) card.append(el('div', { class: 'empty' }, 'No rosters yet. Generate one in the Roster tab.'));
+    const card = el('div', { class: 'card' });
+    card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Recent rosters'), el('span', { class: 'small' }, `${rosters.length} total`)));
+    if (!rosters.length) card.append(el('div', { class: 'empty' }, svgIcon('inbox'), el('div', {}, 'No rosters yet — generate one in the Roster tab')));
     else {
       const t = el('table');
       t.append(el('thead', {}, el('tr', {},
@@ -258,10 +821,10 @@ async function PageDashboard() {
       const tb = el('tbody');
       rosters.slice(0, 8).forEach(r => {
         tb.append(el('tr', {},
-          el('td', {}, r.branch?.name || '—'),
-          el('td', {}, fmtDate(r.week_start)),
+          el('td', {}, el('strong', {}, r.branch?.name || '—')),
+          el('td', {}, niceDate(r.week_start)),
           el('td', {}, el('span', { class: `pill ${r.status === 'published' ? 'ok' : r.status === 'locked' ? 'info' : 'warn'}` }, r.status)),
-          el('td', {}, el('button', { class: 'ghost', onclick: () => { State.page = 'roster'; State._openRoster = r.id; render(); } }, 'View')),
+          el('td', { style: 'text-align:right' }, el('button', { class: 'ghost', onclick: () => { State.page = 'roster'; State._openRoster = r.id; render(); } }, 'View →')),
         ));
       });
       t.append(tb); card.append(t);
@@ -272,21 +835,22 @@ async function PageDashboard() {
 }
 
 async function PageBranches() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Configuration', 'Branches', 'Hours, duty rules, and operating preferences.'));
   const list = await api('/branches');
   const card = el('div', { class: 'card' });
-  card.append(el('div', { style: 'display:flex;justify-content:space-between;align-items:center' },
-    el('h3', { style: 'margin:0' }, 'Branches'),
-    el('button', { onclick: () => openBranchModal() }, '+ New branch')));
+  card.append(el('div', { class: 'card-head' },
+    el('h3', {}, 'All branches'),
+    el('button', { class: 'accent', onclick: () => openBranchModal() }, svgIcon('plus'), ' New branch')));
   const t = el('table');
   t.append(el('thead', {}, el('tr', {}, el('th',{},'Name'), el('th',{},'Slug'), el('th',{},'Hours'), el('th',{},'Status'), el('th',{},''))));
   const tb = el('tbody');
   list.forEach(b => tb.append(el('tr', {},
-    el('td', {}, b.name),
-    el('td', {}, b.slug),
+    el('td', {}, el('strong', {}, b.name)),
+    el('td', {}, el('span', { class: 'chip' }, b.slug)),
     el('td', {}, `${b.open_time || '—'} – ${b.close_time || '—'}`),
-    el('td', {}, el('span', { class: `pill ${b.active ? 'ok' : 'bad'}` }, b.active ? 'active' : 'inactive')),
-    el('td', {}, el('button', { class: 'ghost', onclick: () => openBranchModal(b) }, 'Edit')),
+    el('td', {}, el('span', { class: `pill ${b.active ? 'ok' : 'bad'}` }, b.active ? 'Active' : 'Inactive')),
+    el('td', { style: 'text-align:right' }, el('button', { class: 'ghost', onclick: () => openBranchModal(b) }, 'Edit')),
   )));
   t.append(tb); card.append(t); root.append(card);
   return root;
@@ -303,19 +867,19 @@ function openBranchModal(b = {}) {
     ['min_rest_hours', 'Min rest hours', 'number'],
     ['overtime_after_hrs', 'Overtime after (hrs)', 'number'],
   ];
-  const m = el('div', { class: 'modal' }, el('h3', {}, b.id ? 'Edit branch' : 'New branch'));
+  const m = el('div', { class: 'modal' },
+    el('h3', {}, b.id ? 'Edit branch' : 'New branch'),
+    el('p', { class: 'sub' }, 'Configure operating hours and labour rules.'),
+  );
   fields.forEach(([k, label, type]) => {
     const inp = el('input', { type, value: b[k] ?? '' });
     f[k] = inp;
     m.append(el('label', {}, label), inp);
   });
-  const save = el('button', {}, 'Save');
+  const save = el('button', { class: 'accent' }, 'Save');
   save.onclick = async () => {
     const data = {};
-    fields.forEach(([k,,type]) => {
-      const v = f[k].value;
-      data[k] = type === 'number' ? (v === '' ? null : Number(v)) : v;
-    });
+    fields.forEach(([k,,type]) => { const v = f[k].value; data[k] = type === 'number' ? (v === '' ? null : Number(v)) : v; });
     data.operating_days = b.operating_days || [0,1,2,3,4,5,6];
     data.weekend_days = b.weekend_days || [5,6];
     try {
@@ -324,30 +888,37 @@ function openBranchModal(b = {}) {
       closeModal(); render();
     } catch (e) { showError(e.message); }
   };
-  m.append(el('div', { class: 'actions' },
-    el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'secondary', onclick: closeModal }, 'Cancel'), save));
   showModal(m);
 }
 
 async function PageStaff() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('People', 'Staff directory', 'Active employees, designations, and employment terms.'));
   const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
   const list = await api('/staff' + (branchId ? '?branch_id=' + branchId : ''));
   const card = el('div', { class: 'card' });
-  card.append(el('div', { style: 'display:flex;justify-content:space-between;align-items:center' },
-    el('h3', { style: 'margin:0' }, 'Staff'),
-    el('button', { onclick: () => openStaffModal({}, branchId) }, '+ Add staff')));
+  card.append(el('div', { class: 'card-head' },
+    el('h3', {}, `${list.length} staff`),
+    el('button', { class: 'accent', onclick: () => openStaffModal({}, branchId) }, svgIcon('plus'), ' Add staff')));
   const t = el('table');
-  t.append(el('thead', {}, el('tr', {}, el('th',{},'Emp ID'), el('th',{},'Name'), el('th',{},'Designation'), el('th',{},'Type'), el('th',{},'Branch'), el('th',{},''))));
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Employee'), el('th',{},'Designation'), el('th',{},'Type'), el('th',{},'Branch'), el('th',{},''))));
   const tb = el('tbody');
-  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No staff yet')));
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 5, class: 'empty' }, 'No staff yet')));
   list.forEach(s => tb.append(el('tr', {},
-    el('td', {}, s.employee_id),
-    el('td', {}, s.full_name),
-    el('td', {}, s.designation || '—'),
-    el('td', {}, el('span', { class: 'pill info' }, s.employment_type)),
+    el('td', {},
+      el('div', { style: 'display:flex;align-items:center;gap:10px' },
+        el('div', { class: 'av' }, initials(s.full_name)),
+        el('div', {},
+          el('strong', {}, s.full_name),
+          el('div', { class: 'small' }, s.employee_id),
+        ),
+      ),
+    ),
+    el('td', {}, s.designation || el('span', { class: 'small' }, '—')),
+    el('td', {}, el('span', { class: 'pill info' }, (s.employment_type || '').replace('_', ' '))),
     el('td', {}, s.branch?.name || '—'),
-    el('td', {}, el('button', { class: 'ghost', onclick: () => openStaffModal(s, s.branch_id) }, 'Edit')),
+    el('td', { style: 'text-align:right' }, el('button', { class: 'ghost', onclick: () => openStaffModal(s, s.branch_id) }, 'Edit')),
   )));
   t.append(tb); card.append(t); root.append(card);
   return root;
@@ -365,36 +936,30 @@ function openStaffModal(s = {}, defaultBranchId) {
     ['hourly_rate', 'Hourly rate (USD)', 'number'],
     ['base_salary', 'Base salary (USD)', 'number'],
   ];
-  const m = el('div', { class: 'modal' }, el('h3', {}, s.id ? 'Edit staff' : 'New staff'));
-
-  // Branch select
+  const m = el('div', { class: 'modal' }, el('h3', {}, s.id ? 'Edit staff' : 'New staff'), el('p', { class: 'sub' }, 'Personal and employment details.'));
   const branchSel = el('select');
   State.branches.forEach(b => branchSel.append(el('option', { value: b.id, selected: (s.branch_id || defaultBranchId) === b.id }, b.name)));
   m.append(el('label', {}, 'Branch'), branchSel);
-
   fields.forEach(([k, label, type]) => {
     const inp = el('input', { type, value: s[k] ?? '' });
     f[k] = inp;
     m.append(el('label', {}, label), inp);
   });
-
   const empSel = el('select');
-  ['full_time','part_time','intern','contract'].forEach(et => empSel.append(el('option', { value: et, selected: (s.employment_type || 'full_time') === et }, et)));
+  ['full_time','part_time','intern','contract'].forEach(et => empSel.append(el('option', { value: et, selected: (s.employment_type || 'full_time') === et }, et.replace('_',' '))));
   m.append(el('label', {}, 'Employment type'), empSel);
 
-  // Optional login creation (only when creating new staff)
   let loginCheckbox, loginEmail, loginPass;
   if (!s.id) {
     loginCheckbox = el('input', { type: 'checkbox' });
-    const wrap = el('label', { style: 'display:flex;align-items:center;gap:6px;text-transform:none' }, loginCheckbox, ' Create login for this staff');
-    m.append(wrap);
+    m.append(el('label', { style: 'display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--text-2);font-weight:500;cursor:pointer' }, loginCheckbox, ' Create login for this staff member'));
     loginEmail = el('input', { type: 'email', placeholder: 'login email', style: 'display:none' });
-    loginPass = el('input', { type: 'password', placeholder: 'temp password (min 10)', style: 'display:none' });
+    loginPass = el('input', { type: 'password', placeholder: 'temporary password', style: 'display:none' });
     loginCheckbox.onchange = () => { loginEmail.style.display = loginCheckbox.checked ? '' : 'none'; loginPass.style.display = loginCheckbox.checked ? '' : 'none'; };
     m.append(loginEmail, loginPass);
   }
 
-  const save = el('button', {}, 'Save');
+  const save = el('button', { class: 'accent' }, 'Save staff');
   save.onclick = async () => {
     const data = { branch_id: branchSel.value, employment_type: empSel.value };
     fields.forEach(([k,,type]) => { const v = f[k].value; data[k] = type === 'number' ? (v === '' ? null : Number(v)) : v; });
@@ -407,29 +972,30 @@ function openStaffModal(s = {}, defaultBranchId) {
       closeModal(); render();
     } catch (e) { showError(e.message); }
   };
-  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'secondary', onclick: closeModal }, 'Cancel'), save));
   showModal(m);
 }
 
 async function PageShifts() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Configuration', 'Shift types', 'Define your daily shift patterns per branch.'));
   const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
   const list = await api('/shifts' + (branchId ? '?branch_id=' + branchId : ''));
   const card = el('div', { class: 'card' });
-  card.append(el('div', { style: 'display:flex;justify-content:space-between;align-items:center' },
-    el('h3', { style: 'margin:0' }, 'Shift types'),
-    el('button', { onclick: () => openShiftModal({}, branchId) }, '+ New shift')));
+  card.append(el('div', { class: 'card-head' },
+    el('h3', {}, 'Shifts'),
+    el('button', { class: 'accent', onclick: () => openShiftModal({}, branchId) }, svgIcon('plus'), ' New shift')));
   const t = el('table');
-  t.append(el('thead', {}, el('tr', {}, el('th',{},'Name'), el('th',{},'Time'), el('th',{},'Break'), el('th',{},'Required'), el('th',{},'Night'), el('th',{},''))));
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Name'), el('th',{},'Time'), el('th',{},'Break'), el('th',{},'Required'), el('th',{},'Type'), el('th',{},''))));
   const tb = el('tbody');
   if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No shifts yet')));
   list.forEach(s => tb.append(el('tr', {},
-    el('td', {}, s.name),
+    el('td', {}, el('strong', {}, s.name)),
     el('td', {}, `${s.start_time} – ${s.end_time}`),
     el('td', {}, `${s.break_minutes} min`),
     el('td', {}, s.required_staff),
-    el('td', {}, s.is_night ? '🌙' : ''),
-    el('td', {}, el('button', { class: 'ghost', onclick: () => openShiftModal(s) }, 'Edit')),
+    el('td', {}, s.is_night ? el('span', { class: 'pill info' }, svgIcon('moon'), ' Night') : el('span', { class: 'small' }, '—')),
+    el('td', { style: 'text-align:right' }, el('button', { class: 'ghost', onclick: () => openShiftModal(s) }, 'Edit')),
   )));
   t.append(tb); card.append(t); root.append(card);
   return root;
@@ -437,20 +1003,20 @@ async function PageShifts() {
 
 function openShiftModal(s = {}, defaultBranchId) {
   const f = {};
-  const m = el('div', { class: 'modal' }, el('h3', {}, s.id ? 'Edit shift' : 'New shift'));
+  const m = el('div', { class: 'modal' }, el('h3', {}, s.id ? 'Edit shift' : 'New shift'), el('p', { class: 'sub' }, 'A reusable working window assigned by the roster generator.'));
   const branchSel = el('select');
   State.branches.forEach(b => branchSel.append(el('option', { value: b.id, selected: (s.branch_id || defaultBranchId) === b.id }, b.name)));
   m.append(el('label', {}, 'Branch'), branchSel);
   [
-    ['name', 'Name', 'text'], ['start_time', 'Start (HH:MM)', 'text'], ['end_time', 'End (HH:MM)', 'text'],
-    ['break_minutes', 'Break minutes', 'number'], ['required_staff', 'Required staff', 'number'],
+    ['name', 'Name', 'text'], ['start_time', 'Start time (HH:MM)', 'text'], ['end_time', 'End time (HH:MM)', 'text'],
+    ['break_minutes', 'Break (minutes)', 'number'], ['required_staff', 'Required staff', 'number'],
   ].forEach(([k, l, t]) => {
     const i = el('input', { type: t, value: s[k] ?? (k === 'required_staff' ? 1 : k === 'break_minutes' ? 30 : '') });
     f[k] = i; m.append(el('label', {}, l), i);
   });
   const nightChk = el('input', { type: 'checkbox' }); if (s.is_night) nightChk.checked = true;
-  m.append(el('label', { style: 'display:flex;align-items:center;gap:6px;text-transform:none' }, nightChk, ' Night shift'));
-  const save = el('button', {}, 'Save');
+  m.append(el('label', { style: 'display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--text-2);font-weight:500;cursor:pointer' }, nightChk, ' Mark as night shift'));
+  const save = el('button', { class: 'accent' }, 'Save shift');
   save.onclick = async () => {
     const data = { branch_id: branchSel.value, is_night: nightChk.checked, eligible_designations: s.eligible_designations || [] };
     ['name','start_time','end_time'].forEach(k => data[k] = f[k].value);
@@ -461,51 +1027,53 @@ function openShiftModal(s = {}, defaultBranchId) {
       closeModal(); render();
     } catch (e) { showError(e.message); }
   };
-  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'secondary', onclick: closeModal }, 'Cancel'), save));
   showModal(m);
 }
 
 async function PageRoster() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Scheduling', 'Weekly roster', 'Generate, edit, and publish weekly schedules with automatic fairness rules.'));
   const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
 
-  // Generate bar
-  const gen = el('div', { class: 'card' }, el('div', { class: 'row' }));
+  const gen = el('div', { class: 'card' });
+  gen.append(el('div', { class: 'card-head' }, el('h3', {}, 'Generate weekly roster'), el('span', { class: 'small' }, 'Auto-balanced by hours, rest gaps, eligibility')));
   const wkInput = el('input', { type: 'date', value: fmtDate(mondayOf()) });
-  const genBtn = el('button', {}, 'Generate weekly roster');
+  const genBtn = el('button', { class: 'accent' }, 'Generate roster');
   genBtn.onclick = async () => {
-    genBtn.disabled = true; genBtn.textContent = 'Generating…';
+    genBtn.disabled = true; genBtn.innerHTML = ''; genBtn.append(el('span', { class: 'spinner', style: 'border-color:rgba(255,255,255,.3);border-top-color:#fff;width:14px;height:14px' }), ' Generating…');
     try {
       const r = await api('/roster/generate', { method: 'POST', body: { branch_id: branchId, week_start: wkInput.value } });
       State._openRoster = r.id;
       render();
     } catch (e) { showError(e.message); }
-    finally { genBtn.disabled = false; genBtn.textContent = 'Generate weekly roster'; }
+    finally { genBtn.disabled = false; genBtn.textContent = 'Generate roster'; }
   };
-  gen.firstChild.append(
+  gen.append(el('div', { class: 'row' },
     el('div', {}, el('label', {}, 'Week starting (Monday)'), wkInput),
-    el('div', { style: 'display:flex;align-items:flex-end' }, genBtn),
-  );
+    el('div', { style: 'display:flex;align-items:flex-end;flex:0 0 auto' }, genBtn),
+  ));
   root.append(gen);
 
-  // Existing rosters
   const rosters = await api('/roster?branch_id=' + branchId);
-  const list = el('div', { class: 'card' }, el('h3', {}, 'Rosters'));
-  if (!rosters.length) list.append(el('div', { class: 'empty' }, 'No rosters yet'));
+  const list = el('div', { class: 'card' });
+  list.append(el('div', { class: 'card-head' }, el('h3', {}, 'All rosters'), el('span', { class: 'small' }, `${rosters.length} generated`)));
+  if (!rosters.length) list.append(el('div', { class: 'empty' }, svgIcon('inbox'), el('div', {}, 'No rosters yet')));
   else {
     const t = el('table');
     t.append(el('thead', {}, el('tr', {}, el('th',{},'Week of'), el('th',{},'Status'), el('th',{},''))));
     const tb = el('tbody');
-    rosters.forEach(r => tb.append(el('tr', {},
-      el('td', {}, fmtDate(r.week_start)),
-      el('td', {}, el('span', { class: `pill ${r.status === 'published' ? 'ok' : r.status === 'locked' ? 'info' : 'warn'}` }, r.status)),
-      el('td', {},
-        el('button', { class: 'ghost', onclick: () => { State._openRoster = r.id; render(); } }, 'Open'),
-        ' ',
-        r.status === 'draft' ? el('button', { onclick: () => publishRoster(r.id) }, 'Publish') : null,
-        r.status === 'published' ? el('button', { class: 'secondary', onclick: () => lockRoster(r.id) }, 'Lock') : null,
-      ),
-    )));
+    rosters.forEach(r => {
+      const actions = el('td', { style: 'text-align:right' });
+      actions.append(el('button', { class: 'ghost', onclick: () => { State._openRoster = r.id; render(); } }, 'Open'));
+      if (r.status === 'draft') { actions.append(' ', el('button', { class: 'accent', onclick: () => publishRoster(r.id) }, 'Publish')); }
+      else if (r.status === 'published') { actions.append(' ', el('button', { class: 'secondary', onclick: () => lockRoster(r.id) }, 'Lock')); }
+      tb.append(el('tr', {},
+        el('td', {}, el('strong', {}, niceDate(r.week_start))),
+        el('td', {}, el('span', { class: `pill ${r.status === 'published' ? 'ok' : r.status === 'locked' ? 'info' : 'warn'}` }, r.status)),
+        actions,
+      ));
+    });
     t.append(tb); list.append(t);
   }
   root.append(list);
@@ -521,69 +1089,74 @@ async function lockRoster(id) { if (!confirm('Lock this roster? It cannot be edi
 
 function renderRosterGrid(roster) {
   const card = el('div', { class: 'card' });
-  card.append(el('h3', {}, `Week of ${fmtDate(roster.week_start)} — ${roster.branch?.name || ''}`));
+  card.append(el('div', { class: 'card-head' },
+    el('div', {}, el('h3', {}, `Week of ${niceDate(roster.week_start)}`), el('div', { class: 'small' }, roster.branch?.name)),
+    el('span', { class: `pill ${roster.status === 'published' ? 'ok' : roster.status === 'locked' ? 'info' : 'warn'}` }, roster.status),
+  ));
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(roster.week_start); d.setDate(d.getDate() + i); return d; });
   const grid = el('div', { class: 'roster-grid' });
   grid.append(el('div', { class: 'head' }, 'Shift'));
-  days.forEach(d => grid.append(el('div', { class: 'head' }, ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][(d.getDay()+6)%7] + ' ' + (d.getDate()))));
-
-  // group duties by shift_type id, then by date
+  days.forEach(d => {
+    const dow = (d.getDay() + 6) % 7;
+    const isWeekend = dow >= 5;
+    grid.append(el('div', { class: 'head ' + (isWeekend ? 'weekend' : '') },
+      el('div', {}, ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][dow]),
+      el('div', { style: 'font-family:Fraunces;font-size:18px;font-weight:500;color:inherit;margin-top:2px' }, d.getDate()),
+    ));
+  });
   const byShift = {};
   roster.duties.forEach(d => {
     const key = d.shift_type.id;
-    if (!byShift[key]) byShift[key] = { name: d.shift_type.name, time: `${d.shift_type.start_time}-${d.shift_type.end_time}`, days: {} };
+    if (!byShift[key]) byShift[key] = { name: d.shift_type.name, time: `${d.shift_type.start_time}–${d.shift_type.end_time}`, days: {} };
     const dk = fmtDate(d.date);
     if (!byShift[key].days[dk]) byShift[key].days[dk] = [];
     byShift[key].days[dk].push(d);
   });
-
   Object.values(byShift).forEach(sh => {
-    grid.append(el('div', {}, el('div', { style: 'font-weight:600' }, sh.name), el('div', { class: 'small' }, sh.time)));
+    grid.append(el('div', { class: 'shift-label' }, el('div', {}, sh.name), el('div', { class: 'small' }, sh.time)));
     days.forEach(d => {
       const dk = fmtDate(d);
       const cell = el('div');
       (sh.days[dk] || []).forEach(duty => {
-        const c = el('div', { class: 'duty-cell' },
-          el('div', { class: 'who' }, duty.staff?.full_name || '—'),
-        );
-        cell.append(c);
+        cell.append(el('div', { class: 'duty-cell', title: duty.staff?.full_name }, duty.staff?.full_name?.split(' ').slice(0,2).join(' ') || '—'));
       });
       grid.append(cell);
     });
   });
-
   card.append(grid);
   return card;
 }
 
 async function PageSwaps() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Workflow', 'Duty swaps', 'Peer-to-peer swap requests pending review.'));
   const list = await api('/swaps');
-  const card = el('div', { class: 'card' }, el('h3', {}, 'Swap requests'));
-  if (!list.length) card.append(el('div', { class: 'empty' }, 'No swap requests'));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Swap requests'), el('span', { class: 'small' }, `${list.length} total`)));
+  if (!list.length) card.append(el('div', { class: 'empty' }, svgIcon('inbox'), el('div', {}, 'No swap requests')));
   else {
     const t = el('table');
-    t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Shift'), el('th',{},'From → To'), el('th',{},'Status'), el('th',{},'Warnings'), el('th',{},''))));
+    t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Shift'), el('th',{},'Swap'), el('th',{},'Status'), el('th',{},'Notes'), el('th',{},''))));
     const tb = el('tbody');
     list.forEach(s => {
-      const actions = el('td');
+      const actions = el('td', { style: 'text-align:right' });
       if (State.user.role === 'staff' && s.receiver_id === State.user.staff_id && s.status === 'pending_peer') {
-        actions.append(
-          el('button', { onclick: () => respondSwap(s.id, true) }, 'Accept'), ' ',
-          el('button', { class: 'danger', onclick: () => respondSwap(s.id, false) }, 'Reject'),
-        );
+        actions.append(el('button', { class: 'accent', onclick: () => respondSwap(s.id, true) }, 'Accept'), ' ', el('button', { class: 'danger', onclick: () => respondSwap(s.id, false) }, 'Decline'));
       } else if (['super_admin','branch_manager'].includes(State.user.role) && s.status === 'pending_manager') {
-        actions.append(
-          el('button', { onclick: () => decideSwap(s.id, true) }, 'Approve'), ' ',
-          el('button', { class: 'danger', onclick: () => decideSwap(s.id, false) }, 'Reject'),
-        );
+        actions.append(el('button', { class: 'accent', onclick: () => decideSwap(s.id, true) }, 'Approve'), ' ', el('button', { class: 'danger', onclick: () => decideSwap(s.id, false) }, 'Reject'));
       }
       tb.append(el('tr', {},
-        el('td', {}, fmtDate(s.from_duty.date)),
+        el('td', {}, niceDate(s.from_duty.date)),
         el('td', {}, s.from_duty.shift_type.name),
-        el('td', {}, `${s.requester.full_name} → ${s.receiver.full_name}`),
-        el('td', {}, el('span', { class: `pill ${s.status === 'approved' ? 'ok' : s.status === 'rejected' || s.status === 'peer_rejected' ? 'bad' : 'warn'}` }, s.status)),
-        el('td', {}, (s.rule_warnings || []).join('; ') || '—'),
+        el('td', {},
+          el('div', { style: 'display:flex;align-items:center;gap:6px' },
+            el('span', {}, s.requester.full_name),
+            svgIcon('swap'),
+            el('span', {}, s.receiver.full_name),
+          ),
+        ),
+        el('td', {}, el('span', { class: `pill ${s.status === 'approved' ? 'ok' : s.status === 'rejected' || s.status === 'peer_rejected' ? 'bad' : 'warn'}` }, s.status.replace('_',' '))),
+        el('td', { class: 'small' }, (s.rule_warnings || []).join('; ') || '—'),
         actions,
       ));
     });
@@ -594,22 +1167,24 @@ async function PageSwaps() {
 }
 async function respondSwap(id, accept) { try { await api('/swaps/' + id + '/respond', { method: 'POST', body: { accept } }); render(); } catch (e) { showError(e.message); } }
 async function decideSwap(id, approve) {
-  const reason = approve ? null : prompt('Reason for rejection?') || '';
+  const reason = approve ? null : prompt('Reason for rejection (optional)?') || '';
   try { await api('/swaps/' + id + '/decide', { method: 'POST', body: { approve, reason } }); render(); } catch (e) { showError(e.message); }
 }
 
 async function PageAttendance() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Records', 'Attendance', 'Last 30 days of clock-ins, clock-outs, and adjustments.'));
   const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
   const today = new Date(); const from = new Date(today); from.setDate(from.getDate() - 30);
   const list = await api(`/attendance?branch_id=${branchId}&from=${fmtDate(from)}&to=${fmtDate(today)}`);
-  const card = el('div', { class: 'card' }, el('h3', {}, 'Attendance (last 30 days)'));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Attendance log'), el('span', { class: 'small' }, `${list.length} records`)));
   const t = el('table');
   t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Staff'), el('th',{},'Shift'), el('th',{},'Status'), el('th',{},'Late'), el('th',{},'OT hrs'))));
   const tb = el('tbody');
-  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No records')));
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No records in the last 30 days')));
   list.forEach(a => tb.append(el('tr', {},
-    el('td', {}, fmtDate(a.date)),
+    el('td', {}, niceDate(a.date)),
     el('td', {}, a.staff?.full_name || '—'),
     el('td', {}, a.duty?.shift_type?.name || '—'),
     el('td', {}, el('span', { class: `pill ${a.status === 'worked' ? 'ok' : a.status === 'absent' ? 'bad' : 'warn'}` }, a.status)),
@@ -621,28 +1196,25 @@ async function PageAttendance() {
 }
 
 async function PageLeaves() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Workflow', 'Leave requests', 'Time-off applications awaiting review or approved.'));
   const list = await api('/leaves');
   const card = el('div', { class: 'card' });
-  card.append(el('div', { style: 'display:flex;justify-content:space-between' },
-    el('h3', { style: 'margin:0' }, 'Leave requests'),
-    el('button', { onclick: () => openLeaveModal() }, '+ Request leave')));
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Requests'),
+    el('button', { class: 'accent', onclick: () => openLeaveModal() }, svgIcon('plus'), ' Request leave')));
   const t = el('table');
   t.append(el('thead', {}, el('tr', {}, el('th',{},'Staff'), el('th',{},'From'), el('th',{},'To'), el('th',{},'Reason'), el('th',{},'Status'), el('th',{},''))));
   const tb = el('tbody');
   if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No leave requests')));
   list.forEach(l => {
-    const actions = el('td');
+    const actions = el('td', { style: 'text-align:right' });
     if (['super_admin','branch_manager'].includes(State.user.role) && l.status === 'pending') {
-      actions.append(
-        el('button', { onclick: () => decideLeave(l.id, true) }, 'Approve'), ' ',
-        el('button', { class: 'danger', onclick: () => decideLeave(l.id, false) }, 'Reject'),
-      );
+      actions.append(el('button', { class: 'accent', onclick: () => decideLeave(l.id, true) }, 'Approve'), ' ', el('button', { class: 'danger', onclick: () => decideLeave(l.id, false) }, 'Reject'));
     }
     tb.append(el('tr', {},
       el('td', {}, l.staff.full_name),
-      el('td', {}, fmtDate(l.from_date)), el('td', {}, fmtDate(l.to_date)),
-      el('td', {}, l.reason || '—'),
+      el('td', {}, niceDate(l.from_date)), el('td', {}, niceDate(l.to_date)),
+      el('td', { class: 'small' }, l.reason || '—'),
       el('td', {}, el('span', { class: `pill ${l.status === 'approved' ? 'ok' : l.status === 'rejected' ? 'bad' : 'warn'}` }, l.status)),
       actions,
     ));
@@ -651,36 +1223,37 @@ async function PageLeaves() {
   return root;
 }
 function openLeaveModal() {
-  const m = el('div', { class: 'modal' }, el('h3', {}, 'Request leave'));
+  const m = el('div', { class: 'modal' }, el('h3', {}, 'Request leave'), el('p', { class: 'sub' }, 'Submit time-off for manager approval.'));
   const from = el('input', { type: 'date' });
   const to = el('input', { type: 'date' });
-  const reason = el('textarea', { rows: 3 });
+  const reason = el('textarea', { rows: 3, placeholder: 'Brief reason (optional)' });
   m.append(el('label', {}, 'From'), from, el('label', {}, 'To'), to, el('label', {}, 'Reason'), reason);
-  const save = el('button', {}, 'Submit');
+  const save = el('button', { class: 'accent' }, 'Submit request');
   save.onclick = async () => {
     try { await api('/leaves', { method: 'POST', body: { from_date: from.value, to_date: to.value, reason: reason.value } }); closeModal(); render(); }
     catch (e) { showError(e.message); }
   };
-  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'secondary', onclick: closeModal }, 'Cancel'), save));
   showModal(m);
 }
 async function decideLeave(id, approve) { try { await api('/leaves/' + id + '/decide', { method: 'POST', body: { approve } }); render(); } catch (e) { showError(e.message); } }
 
 async function PagePayroll() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Finance', 'Payroll', 'Monthly payroll preview and export — based on approved attendance only.'));
   const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
   const now = new Date();
-  const yIn = el('input', { type: 'number', value: now.getFullYear(), style: 'max-width:120px' });
-  const mIn = el('input', { type: 'number', min: 1, max: 12, value: now.getMonth() + 1, style: 'max-width:80px' });
+  const yIn = el('input', { type: 'number', value: now.getFullYear(), style: 'max-width:140px' });
+  const mIn = el('input', { type: 'number', min: 1, max: 12, value: now.getMonth() + 1, style: 'max-width:90px' });
   const card = el('div', { class: 'card' });
-  card.append(el('h3', {}, 'Payroll export'),
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Generate payroll'), el('span', { class: 'small' }, 'Approved attendance only')),
     el('div', { class: 'row' },
       el('div', {}, el('label', {}, 'Year'), yIn),
       el('div', {}, el('label', {}, 'Month'), mIn),
-      el('div', { style: 'display:flex;align-items:flex-end;gap:8px' },
-        el('button', { onclick: () => preview() }, 'Preview'),
-        el('button', { class: 'secondary', onclick: () => download('xlsx') }, 'Download .xlsx'),
-        el('button', { class: 'secondary', onclick: () => download('csv') }, 'Download .csv'),
+      el('div', { style: 'display:flex;align-items:flex-end;gap:8px;flex:0 0 auto' },
+        el('button', { class: 'accent', onclick: () => preview() }, 'Preview'),
+        el('button', { class: 'secondary', onclick: () => download('xlsx') }, svgIcon('download'), ' .xlsx'),
+        el('button', { class: 'secondary', onclick: () => download('csv') }, svgIcon('download'), ' .csv'),
       ),
     ));
   const previewArea = el('div'); card.append(previewArea);
@@ -696,11 +1269,12 @@ async function PagePayroll() {
         el('th',{},'Sched'), el('th',{},'Worked'), el('th',{},'Late'), el('th',{},'Absent'), el('th',{},'OT hrs'))));
       const tb = el('tbody');
       rows.forEach(r => tb.append(el('tr', {},
-        el('td', {}, r.employee_id), el('td', {}, r.name), el('td', {}, r.branch),
+        el('td', {}, el('span', { class: 'chip' }, r.employee_id)), el('td', {}, el('strong', {}, r.name)), el('td', {}, r.branch),
         el('td', {}, r.scheduled_days), el('td', {}, r.worked_days), el('td', {}, r.late_count), el('td', {}, r.absences),
-        el('td', {}, r.overtime_hours.toFixed(1)),
+        el('td', {}, Number(r.overtime_hours).toFixed(1)),
       )));
-      t.append(tb); previewArea.append(t);
+      t.append(tb);
+      previewArea.append(el('hr', { class: 'divider' }), t);
     } catch (e) { previewArea.append(el('div', { class: 'err' }, e.message)); }
   }
   async function download(format) {
@@ -710,45 +1284,48 @@ async function PagePayroll() {
       a.download = `payroll_${yIn.value}_${String(mIn.value).padStart(2,'0')}.${format}`; a.click();
     } catch (e) { showError(e.message); }
   }
-
   root.append(card);
   return root;
 }
 
 async function PageAudit() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Compliance', 'Audit log', 'Every consequential action is recorded for review.'));
   const branchId = State.user.role === 'super_admin' ? (State.selectedBranchId || '') : State.user.branch_id;
   const list = await api('/audit?branch_id=' + branchId);
-  const card = el('div', { class: 'card' }, el('h3', {}, 'Audit log'));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Recent activity'), el('span', { class: 'small' }, `${list.length} entries`)));
   const t = el('table');
-  t.append(el('thead', {}, el('tr', {}, el('th',{},'When'), el('th',{},'Who'), el('th',{},'Action'), el('th',{},'Entity'), el('th',{},'Reason'))));
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'When'), el('th',{},'Who'), el('th',{},'Action'), el('th',{},'Entity'), el('th',{},'Notes'))));
   const tb = el('tbody');
   if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 5, class: 'empty' }, 'No log entries')));
   list.forEach(l => tb.append(el('tr', {},
-    el('td', {}, fmtDateTime(l.created_at)),
+    el('td', { class: 'small' }, fmtDateTime(l.created_at)),
     el('td', {}, l.user?.name || '—'),
     el('td', {}, el('span', { class: 'pill info' }, l.action)),
-    el('td', {}, `${l.entity}${l.entity_id ? '#' + l.entity_id.slice(0,8) : ''}`),
-    el('td', {}, l.reason || '—'),
+    el('td', { class: 'small' }, `${l.entity}${l.entity_id ? ' #' + l.entity_id.slice(0,8) : ''}`),
+    el('td', { class: 'small' }, l.reason || '—'),
   )));
   t.append(tb); card.append(t); root.append(card);
   return root;
 }
 
 async function PageMyRoster() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Your week', `Hello, ${State.user.name.split(' ')[0]}`, 'Your upcoming shifts. Clock in when you arrive, request a swap if you need cover.'));
   const list = await api('/roster/me/upcoming');
-  const card = el('div', { class: 'card' }, el('h3', {}, 'My upcoming duties'));
-  if (!list.length) card.append(el('div', { class: 'empty' }, 'Nothing scheduled. Check back after the next roster is published.'));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Upcoming duties'), el('span', { class: 'small' }, `${list.length} scheduled`)));
+  if (!list.length) card.append(el('div', { class: 'empty' }, svgIcon('inbox'), el('div', {}, 'Nothing scheduled. Check back after the next roster is published.')));
   else {
     const t = el('table');
     t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Shift'), el('th',{},'Time'), el('th',{},''))));
     const tb = el('tbody');
     list.forEach(d => tb.append(el('tr', {},
-      el('td', {}, fmtDate(d.date)),
-      el('td', {}, d.shift_type.name),
+      el('td', {}, el('strong', {}, niceDate(d.date))),
+      el('td', {}, d.shift_type.name, d.is_night ? el('span', { style: 'margin-left:6px' }, svgIcon('moon')) : null),
       el('td', {}, `${d.shift_type.start_time} – ${d.shift_type.end_time}`),
-      el('td', {},
+      el('td', { style: 'text-align:right' },
         el('button', { class: 'ghost', onclick: () => clockIn(d.id) }, 'Clock in'), ' ',
         el('button', { class: 'ghost', onclick: () => clockOut(d.id) }, 'Clock out'), ' ',
         el('button', { class: 'secondary', onclick: () => requestSwap(d.id) }, 'Request swap'),
@@ -759,33 +1336,41 @@ async function PageMyRoster() {
   root.append(card);
   return root;
 }
-async function clockIn(duty_id) { try { await api('/attendance/clock-in', { method: 'POST', body: { duty_id } }); alert('Clocked in'); } catch(e){ showError(e.message);} }
-async function clockOut(duty_id) { try { await api('/attendance/clock-out', { method: 'POST', body: { duty_id } }); alert('Clocked out'); } catch(e){ showError(e.message);} }
+async function clockIn(duty_id) { try { const a = await api('/attendance/clock-in', { method: 'POST', body: { duty_id } }); alert('Clocked in.' + (a.late_minutes ? ` (${a.late_minutes}m late)` : '')); } catch(e){ showError(e.message);} }
+async function clockOut(duty_id) { try { const a = await api('/attendance/clock-out', { method: 'POST', body: { duty_id } }); alert('Clocked out.' + (a.overtime_hours ? ` OT: ${a.overtime_hours.toFixed(1)}h` : '')); } catch(e){ showError(e.message);} }
 async function requestSwap(duty_id) {
   const peers = await api('/staff?branch_id=' + State.user.branch_id);
-  const m = el('div', { class: 'modal' }, el('h3', {}, 'Request swap'));
+  const m = el('div', { class: 'modal' }, el('h3', {}, 'Request swap'), el('p', { class: 'sub' }, 'Pick a colleague and add a brief reason.'));
   const sel = el('select');
   peers.filter(p => p.id !== State.user.staff_id).forEach(p => sel.append(el('option', { value: p.id }, p.full_name)));
-  const reason = el('textarea', { rows: 2, placeholder: 'Reason (optional)' });
+  const reason = el('textarea', { rows: 2, placeholder: 'Why do you need cover?' });
   m.append(el('label', {}, 'Swap with'), sel, el('label', {}, 'Reason'), reason);
-  const send = el('button', {}, 'Send request');
+  const send = el('button', { class: 'accent' }, 'Send request');
   send.onclick = async () => {
     try { await api('/swaps', { method: 'POST', body: { from_duty_id: duty_id, receiver_staff_id: sel.value, reason: reason.value } }); closeModal(); render(); }
     catch (e) { showError(e.message); }
   };
-  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), send));
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'secondary', onclick: closeModal }, 'Cancel'), send));
   showModal(m);
 }
 
 async function PageMyAttendance() {
-  const root = el('div');
+  const root = el('div', { class: 'fade-in' });
+  root.append(SectionHead('Your record', 'My attendance', 'Personal punctuality and overtime summary for this month.'));
   const j = await api('/attendance/me/summary');
-  const card = el('div', { class: 'card' }, el('h3', {}, `My attendance — ${j.month || ''}/${j.year || ''}`));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { class: 'card-head' }, el('h3', {}, `${j.month || ''}/${j.year || ''}`), el('span', { class: 'small' }, `${j.summary?.total || 0} records`)));
   const grid = el('div', { class: 'grid cols-4' });
-  Object.entries(j.summary || {}).forEach(([k,v]) => {
-    grid.append(el('div', { class: 'card' }, el('div', { class: 'kpi' }, typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v), el('div', { class: 'kpi-label' }, k.replace('_', ' '))));
-  });
-  card.append(grid);
+  if (!Object.keys(j.summary || {}).length) {
+    card.append(el('div', { class: 'empty' }, 'No attendance records this month'));
+  } else {
+    Object.entries(j.summary || {}).forEach(([k,v]) => {
+      grid.append(el('div', { class: 'card tight' }, el('div', { class: 'kpi-card' },
+        el('div', { class: 'kpi accent' }, typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v),
+        el('div', { class: 'kpi-label' }, k.replace('_', ' ')))));
+    });
+    card.append(grid);
+  }
   root.append(card);
   return root;
 }
@@ -817,7 +1402,7 @@ async function render() {
   app.append(Header(), Nav());
   const main = el('main');
   app.append(main);
-  main.append(el('div', { class: 'small' }, 'Loading…'));
+  main.append(el('div', { class: 'center-loader' }, el('span', { class: 'spinner' })));
 
   const fn = PAGES[State.page] || PAGES[NAV_BY_ROLE[State.user.role][0]];
   try {
@@ -826,7 +1411,7 @@ async function render() {
     main.append(view);
   } catch (e) {
     main.innerHTML = '';
-    main.append(el('div', { class: 'card err' }, 'Error: ' + e.message));
+    main.append(el('div', { class: 'card' }, el('div', { class: 'err' }, 'Error: ' + e.message)));
   }
 
   if (State.modal) app.append(el('div', { class: 'modal-bg', onclick: (e) => { if (e.target.className === 'modal-bg') closeModal(); } }, State.modal));
