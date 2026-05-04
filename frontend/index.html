@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>BCC Duty & Roster</title>
+<style>
+  :root {
+    --bg:#0b0f17; --panel:#121826; --panel2:#1a2236; --border:#222b40;
+    --text:#e7ecf3; --muted:#8a96ad; --accent:#d4af37; --accent2:#b58e1a;
+    --green:#2ecc71; --red:#ff5a5f; --yellow:#f1c40f; --blue:#3498db;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh}
+  a{color:var(--accent);text-decoration:none}
+  button,input,select,textarea{font:inherit;color:var(--text)}
+  button{background:var(--accent);color:#000;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+  button.danger{background:var(--red);color:#fff}
+  button.ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  input,select,textarea{background:var(--panel2);border:1px solid var(--border);padding:8px 10px;border-radius:6px;width:100%}
+  label{display:block;margin:8px 0 4px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row > *{flex:1;min-width:200px}
+  .grid{display:grid;gap:14px}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:800px){.grid.cols-3,.grid.cols-4{grid-template-columns:1fr 1fr}}
+  @media(max-width:520px){.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--panel2);border:1px solid var(--border);color:var(--muted)}
+  .pill.ok{background:#0f3a25;color:#7be0a8;border-color:#155534}
+  .pill.warn{background:#3a2f0f;color:#ffd96a;border-color:#5a4a14}
+  .pill.bad{background:#3a1417;color:#ff8c92;border-color:#5a1d22}
+  .pill.info{background:#0f2a3a;color:#8ec9f0;border-color:#16415c}
+  header.top{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+  header.top h1{margin:0;font-size:16px;letter-spacing:.04em}
+  header.top h1 span{color:var(--accent)}
+  nav.tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 18px;background:var(--panel);border-bottom:1px solid var(--border)}
+  nav.tabs button{background:transparent;color:var(--muted);border:0;padding:8px 14px;border-radius:6px;white-space:nowrap;font-weight:500}
+  nav.tabs button.active{background:var(--panel2);color:var(--accent)}
+  main{padding:18px;max-width:1400px;margin:0 auto}
+  .empty{padding:30px;text-align:center;color:var(--muted)}
+  .kpi{font-size:28px;font-weight:700;color:var(--accent)}
+  .kpi-label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#0b0f17 0%, #1a2236 100%)}
+  .login .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .login h2{margin:0 0 4px;font-size:24px}
+  .login p{margin:0 0 24px;color:var(--muted)}
+  .err{background:#3a1417;color:#ff8c92;border:1px solid #5a1d22;padding:8px 12px;border-radius:6px;margin:10px 0;font-size:13px}
+  .ok-msg{background:#0f3a25;color:#7be0a8;border:1px solid #155534;padding:8px 12px;border-radius:6px;margin:10px 0;font-size:13px}
+  .roster-grid{display:grid;grid-template-columns:160px repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:auto}
+  .roster-grid > div{background:var(--panel);padding:8px;font-size:12px;min-height:60px}
+  .roster-grid .head{background:var(--panel2);font-weight:600;text-align:center}
+  .duty-cell{background:#1f2942;border-radius:4px;padding:4px 6px;margin:2px 0;font-size:11px}
+  .duty-cell .who{font-weight:600}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:50;padding:20px}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:100%;max-height:90vh;overflow:auto}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .notif-dot{display:inline-block;width:8px;height:8px;background:var(--red);border-radius:50%;margin-left:4px}
+  .small{font-size:12px;color:var(--muted)}
+  hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   BCC Duty & Roster — Vanilla SPA
+   ============================================================ */
+const API = (location.port === '4001' || location.hostname === 'localhost') ? '/api' : '/api';
+
+const State = {
+  user: null,
+  token: localStorage.getItem('bcc_token') || null,
+  refresh: localStorage.getItem('bcc_refresh') || null,
+  branches: [],
+  page: 'dashboard',
+  selectedBranchId: localStorage.getItem('bcc_branch') || null,
+  modal: null,
+};
+
+/* -------------------- API helper -------------------- */
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (State.token) headers.Authorization = `Bearer ${State.token}`;
+  const r = await fetch(API + path, { ...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  if (r.status === 401 && State.refresh && path !== '/auth/refresh') {
+    const ok = await tryRefresh();
+    if (ok) return api(path, opts);
+    logout();
+  }
+  if (r.status === 204) return null;
+  let data = null;
+  try { data = await r.json(); } catch {}
+  if (!r.ok) throw new Error(data?.error || `HTTP ${r.status}`);
+  return data;
+}
+async function apiBlob(path) {
+  const r = await fetch(API + path, { headers: State.token ? { Authorization: `Bearer ${State.token}` } : {} });
+  if (!r.ok) throw new Error('Download failed');
+  return r.blob();
+}
+async function tryRefresh() {
+  try {
+    const r = await fetch(API + '/auth/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: State.refresh }) });
+    if (!r.ok) return false;
+    const j = await r.json();
+    State.token = j.access_token; State.refresh = j.refresh_token;
+    localStorage.setItem('bcc_token', j.access_token);
+    localStorage.setItem('bcc_refresh', j.refresh_token);
+    return true;
+  } catch { return false; }
+}
+function logout() {
+  localStorage.removeItem('bcc_token'); localStorage.removeItem('bcc_refresh');
+  State.token = null; State.refresh = null; State.user = null;
+  render();
+}
+
+/* -------------------- Helpers -------------------- */
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const k in attrs) {
+    if (k === 'class') n.className = attrs[k];
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+    else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k]);
+  }
+  kids.flat().forEach(k => { if (k == null || k === false) return; n.append(k.nodeType ? k : document.createTextNode(k)); });
+  return n;
+};
+const fmtDate = (d) => new Date(d).toISOString().slice(0, 10);
+const fmtTime = (d) => new Date(d).toISOString().slice(11, 16);
+const fmtDateTime = (d) => `${fmtDate(d)} ${fmtTime(d)}`;
+function mondayOf(d = new Date()) { const x = new Date(d); const dow = (x.getDay() + 6) % 7; x.setDate(x.getDate() - dow); x.setHours(0,0,0,0); return x; }
+function showModal(content) { State.modal = content; render(); }
+function closeModal() { State.modal = null; render(); }
+function showError(msg) { alert(msg); }
+
+/* -------------------- Login -------------------- */
+function LoginView() {
+  const wrap = el('div', { class: 'login' });
+  const box = el('div', { class: 'box' });
+  box.append(
+    el('h2', {}, 'BCC Duty & Roster'),
+    el('p', {}, 'SEED · Authentic Maldives · Creator Hub'),
+  );
+  const errBox = el('div');
+  const emailIn = el('input', { type: 'email', placeholder: 'admin@bcc.local', value: 'admin@bcc.local' });
+  const passIn = el('input', { type: 'password', placeholder: 'Password' });
+  const submit = el('button', { style: 'width:100%;margin-top:14px' }, 'Sign in');
+  submit.onclick = async () => {
+    submit.disabled = true; errBox.innerHTML = '';
+    try {
+      const j = await api('/auth/login', { method: 'POST', body: { email: emailIn.value, password: passIn.value } });
+      State.token = j.access_token; State.refresh = j.refresh_token; State.user = j.user;
+      localStorage.setItem('bcc_token', j.access_token);
+      localStorage.setItem('bcc_refresh', j.refresh_token);
+      State.selectedBranchId = j.user.branch_id || null;
+      await loadBootstrap();
+      render();
+    } catch (e) {
+      errBox.append(el('div', { class: 'err' }, e.message));
+      submit.disabled = false;
+    }
+  };
+  box.append(
+    el('label', {}, 'Email'), emailIn,
+    el('label', {}, 'Password'), passIn,
+    errBox, submit,
+    el('p', { class: 'small', style: 'margin-top:18px;text-align:center' }, 'Default: admin@bcc.local / ChangeMe123!'),
+  );
+  wrap.append(box);
+  return wrap;
+}
+
+/* -------------------- Bootstrap data -------------------- */
+async function loadBootstrap() {
+  if (!State.user) {
+    try { State.user = await api('/auth/me'); } catch { return; }
+  }
+  try { State.branches = await api('/branches'); } catch { State.branches = []; }
+  if (!State.selectedBranchId && State.branches[0]) State.selectedBranchId = State.branches[0].id;
+}
+
+/* -------------------- Header / Nav -------------------- */
+const NAV_BY_ROLE = {
+  super_admin:    ['dashboard','branches','staff','shifts','roster','swaps','attendance','leaves','payroll','audit'],
+  branch_manager: ['dashboard','staff','shifts','roster','swaps','attendance','leaves','payroll'],
+  staff:          ['my-roster','my-swaps','my-attendance','leaves'],
+};
+
+function Header() {
+  const h = el('header', { class: 'top' });
+  h.append(
+    el('h1', {}, 'BCC ', el('span', {}, 'Duty & Roster')),
+    el('div', { style: 'display:flex;gap:8px;align-items:center' },
+      State.user ? el('span', { class: 'small' }, `${State.user.name} · ${State.user.role}`) : null,
+      el('button', { class: 'ghost', onclick: logout }, 'Logout'),
+    ),
+  );
+  return h;
+}
+function Nav() {
+  const tabs = NAV_BY_ROLE[State.user.role] || [];
+  const n = el('nav', { class: 'tabs' });
+  tabs.forEach(t => {
+    const b = el('button', { class: State.page === t ? 'active' : '' }, t.replace('-', ' '));
+    b.onclick = () => { State.page = t; render(); };
+    n.append(b);
+  });
+  // branch selector for super_admin
+  if (State.user.role === 'super_admin' && State.branches.length > 1) {
+    const sel = el('select', { style: 'max-width:220px;margin-left:auto' });
+    State.branches.forEach(b => sel.append(el('option', { value: b.id, selected: b.id === State.selectedBranchId }, b.name)));
+    sel.onchange = () => { State.selectedBranchId = sel.value; localStorage.setItem('bcc_branch', sel.value); render(); };
+    n.append(sel);
+  }
+  return n;
+}
+
+/* -------------------- Pages -------------------- */
+async function PageDashboard() {
+  const root = el('div');
+  const grid = el('div', { class: 'grid cols-4' });
+  try {
+    const [staff, swaps, rosters, leaves] = await Promise.all([
+      api('/staff' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id)),
+      api('/swaps?status=pending_manager'),
+      api('/roster' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id)),
+      api('/leaves?status=pending'),
+    ]);
+    grid.append(
+      el('div', { class: 'card' }, el('div', { class: 'kpi' }, staff.length), el('div', { class: 'kpi-label' }, 'Total staff')),
+      el('div', { class: 'card' }, el('div', { class: 'kpi' }, swaps.length), el('div', { class: 'kpi-label' }, 'Pending swaps')),
+      el('div', { class: 'card' }, el('div', { class: 'kpi' }, leaves.length), el('div', { class: 'kpi-label' }, 'Pending leaves')),
+      el('div', { class: 'card' }, el('div', { class: 'kpi' }, rosters.filter(r => r.status === 'published').length), el('div', { class: 'kpi-label' }, 'Published rosters')),
+    );
+  } catch (e) {
+    grid.append(el('div', { class: 'card empty' }, 'Could not load dashboard: ' + e.message));
+  }
+  root.append(grid);
+
+  // recent rosters
+  try {
+    const rosters = await api('/roster' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id));
+    const card = el('div', { class: 'card' }, el('h3', {}, 'Recent rosters'));
+    if (!rosters.length) card.append(el('div', { class: 'empty' }, 'No rosters yet. Generate one in the Roster tab.'));
+    else {
+      const t = el('table');
+      t.append(el('thead', {}, el('tr', {},
+        el('th', {}, 'Branch'), el('th', {}, 'Week of'), el('th', {}, 'Status'), el('th', {}, ''))));
+      const tb = el('tbody');
+      rosters.slice(0, 8).forEach(r => {
+        tb.append(el('tr', {},
+          el('td', {}, r.branch?.name || '—'),
+          el('td', {}, fmtDate(r.week_start)),
+          el('td', {}, el('span', { class: `pill ${r.status === 'published' ? 'ok' : r.status === 'locked' ? 'info' : 'warn'}` }, r.status)),
+          el('td', {}, el('button', { class: 'ghost', onclick: () => { State.page = 'roster'; State._openRoster = r.id; render(); } }, 'View')),
+        ));
+      });
+      t.append(tb); card.append(t);
+    }
+    root.append(card);
+  } catch {}
+  return root;
+}
+
+async function PageBranches() {
+  const root = el('div');
+  const list = await api('/branches');
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { style: 'display:flex;justify-content:space-between;align-items:center' },
+    el('h3', { style: 'margin:0' }, 'Branches'),
+    el('button', { onclick: () => openBranchModal() }, '+ New branch')));
+  const t = el('table');
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Name'), el('th',{},'Slug'), el('th',{},'Hours'), el('th',{},'Status'), el('th',{},''))));
+  const tb = el('tbody');
+  list.forEach(b => tb.append(el('tr', {},
+    el('td', {}, b.name),
+    el('td', {}, b.slug),
+    el('td', {}, `${b.open_time || '—'} – ${b.close_time || '—'}`),
+    el('td', {}, el('span', { class: `pill ${b.active ? 'ok' : 'bad'}` }, b.active ? 'active' : 'inactive')),
+    el('td', {}, el('button', { class: 'ghost', onclick: () => openBranchModal(b) }, 'Edit')),
+  )));
+  t.append(tb); card.append(t); root.append(card);
+  return root;
+}
+
+function openBranchModal(b = {}) {
+  const f = {};
+  const fields = [
+    ['name', 'Name', 'text'], ['slug', 'Slug', 'text'], ['location', 'Location', 'text'],
+    ['open_time', 'Open (HH:MM)', 'text'], ['close_time', 'Close (HH:MM)', 'text'],
+    ['max_hours_per_day', 'Max hours/day', 'number'],
+    ['max_hours_per_week', 'Max hours/week', 'number'],
+    ['max_shifts_per_week', 'Max shifts/week', 'number'],
+    ['min_rest_hours', 'Min rest hours', 'number'],
+    ['overtime_after_hrs', 'Overtime after (hrs)', 'number'],
+  ];
+  const m = el('div', { class: 'modal' }, el('h3', {}, b.id ? 'Edit branch' : 'New branch'));
+  fields.forEach(([k, label, type]) => {
+    const inp = el('input', { type, value: b[k] ?? '' });
+    f[k] = inp;
+    m.append(el('label', {}, label), inp);
+  });
+  const save = el('button', {}, 'Save');
+  save.onclick = async () => {
+    const data = {};
+    fields.forEach(([k,,type]) => {
+      const v = f[k].value;
+      data[k] = type === 'number' ? (v === '' ? null : Number(v)) : v;
+    });
+    data.operating_days = b.operating_days || [0,1,2,3,4,5,6];
+    data.weekend_days = b.weekend_days || [5,6];
+    try {
+      if (b.id) await api('/branches/' + b.id, { method: 'PUT', body: data });
+      else await api('/branches', { method: 'POST', body: data });
+      closeModal(); render();
+    } catch (e) { showError(e.message); }
+  };
+  m.append(el('div', { class: 'actions' },
+    el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  showModal(m);
+}
+
+async function PageStaff() {
+  const root = el('div');
+  const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
+  const list = await api('/staff' + (branchId ? '?branch_id=' + branchId : ''));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { style: 'display:flex;justify-content:space-between;align-items:center' },
+    el('h3', { style: 'margin:0' }, 'Staff'),
+    el('button', { onclick: () => openStaffModal({}, branchId) }, '+ Add staff')));
+  const t = el('table');
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Emp ID'), el('th',{},'Name'), el('th',{},'Designation'), el('th',{},'Type'), el('th',{},'Branch'), el('th',{},''))));
+  const tb = el('tbody');
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No staff yet')));
+  list.forEach(s => tb.append(el('tr', {},
+    el('td', {}, s.employee_id),
+    el('td', {}, s.full_name),
+    el('td', {}, s.designation || '—'),
+    el('td', {}, el('span', { class: 'pill info' }, s.employment_type)),
+    el('td', {}, s.branch?.name || '—'),
+    el('td', {}, el('button', { class: 'ghost', onclick: () => openStaffModal(s, s.branch_id) }, 'Edit')),
+  )));
+  t.append(tb); card.append(t); root.append(card);
+  return root;
+}
+
+function openStaffModal(s = {}, defaultBranchId) {
+  const f = {};
+  const fields = [
+    ['employee_id', 'Employee ID', 'text'],
+    ['full_name', 'Full name', 'text'],
+    ['designation', 'Designation', 'text'],
+    ['email', 'Email', 'email'],
+    ['phone', 'Phone', 'text'],
+    ['weekly_hour_limit', 'Weekly hour limit', 'number'],
+    ['hourly_rate', 'Hourly rate (USD)', 'number'],
+    ['base_salary', 'Base salary (USD)', 'number'],
+  ];
+  const m = el('div', { class: 'modal' }, el('h3', {}, s.id ? 'Edit staff' : 'New staff'));
+
+  // Branch select
+  const branchSel = el('select');
+  State.branches.forEach(b => branchSel.append(el('option', { value: b.id, selected: (s.branch_id || defaultBranchId) === b.id }, b.name)));
+  m.append(el('label', {}, 'Branch'), branchSel);
+
+  fields.forEach(([k, label, type]) => {
+    const inp = el('input', { type, value: s[k] ?? '' });
+    f[k] = inp;
+    m.append(el('label', {}, label), inp);
+  });
+
+  const empSel = el('select');
+  ['full_time','part_time','intern','contract'].forEach(et => empSel.append(el('option', { value: et, selected: (s.employment_type || 'full_time') === et }, et)));
+  m.append(el('label', {}, 'Employment type'), empSel);
+
+  // Optional login creation (only when creating new staff)
+  let loginCheckbox, loginEmail, loginPass;
+  if (!s.id) {
+    loginCheckbox = el('input', { type: 'checkbox' });
+    const wrap = el('label', { style: 'display:flex;align-items:center;gap:6px;text-transform:none' }, loginCheckbox, ' Create login for this staff');
+    m.append(wrap);
+    loginEmail = el('input', { type: 'email', placeholder: 'login email', style: 'display:none' });
+    loginPass = el('input', { type: 'password', placeholder: 'temp password (min 10)', style: 'display:none' });
+    loginCheckbox.onchange = () => { loginEmail.style.display = loginCheckbox.checked ? '' : 'none'; loginPass.style.display = loginCheckbox.checked ? '' : 'none'; };
+    m.append(loginEmail, loginPass);
+  }
+
+  const save = el('button', {}, 'Save');
+  save.onclick = async () => {
+    const data = { branch_id: branchSel.value, employment_type: empSel.value };
+    fields.forEach(([k,,type]) => { const v = f[k].value; data[k] = type === 'number' ? (v === '' ? null : Number(v)) : v; });
+    if (loginCheckbox?.checked) { data.create_login = true; data.login_email = loginEmail.value; data.login_password = loginPass.value; }
+    data.eligible_shift_ids = s.eligible_shift_ids || [];
+    data.unavailable_days = s.unavailable_days || [];
+    try {
+      if (s.id) await api('/staff/' + s.id, { method: 'PUT', body: data });
+      else await api('/staff', { method: 'POST', body: data });
+      closeModal(); render();
+    } catch (e) { showError(e.message); }
+  };
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  showModal(m);
+}
+
+async function PageShifts() {
+  const root = el('div');
+  const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
+  const list = await api('/shifts' + (branchId ? '?branch_id=' + branchId : ''));
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { style: 'display:flex;justify-content:space-between;align-items:center' },
+    el('h3', { style: 'margin:0' }, 'Shift types'),
+    el('button', { onclick: () => openShiftModal({}, branchId) }, '+ New shift')));
+  const t = el('table');
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Name'), el('th',{},'Time'), el('th',{},'Break'), el('th',{},'Required'), el('th',{},'Night'), el('th',{},''))));
+  const tb = el('tbody');
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No shifts yet')));
+  list.forEach(s => tb.append(el('tr', {},
+    el('td', {}, s.name),
+    el('td', {}, `${s.start_time} – ${s.end_time}`),
+    el('td', {}, `${s.break_minutes} min`),
+    el('td', {}, s.required_staff),
+    el('td', {}, s.is_night ? '🌙' : ''),
+    el('td', {}, el('button', { class: 'ghost', onclick: () => openShiftModal(s) }, 'Edit')),
+  )));
+  t.append(tb); card.append(t); root.append(card);
+  return root;
+}
+
+function openShiftModal(s = {}, defaultBranchId) {
+  const f = {};
+  const m = el('div', { class: 'modal' }, el('h3', {}, s.id ? 'Edit shift' : 'New shift'));
+  const branchSel = el('select');
+  State.branches.forEach(b => branchSel.append(el('option', { value: b.id, selected: (s.branch_id || defaultBranchId) === b.id }, b.name)));
+  m.append(el('label', {}, 'Branch'), branchSel);
+  [
+    ['name', 'Name', 'text'], ['start_time', 'Start (HH:MM)', 'text'], ['end_time', 'End (HH:MM)', 'text'],
+    ['break_minutes', 'Break minutes', 'number'], ['required_staff', 'Required staff', 'number'],
+  ].forEach(([k, l, t]) => {
+    const i = el('input', { type: t, value: s[k] ?? (k === 'required_staff' ? 1 : k === 'break_minutes' ? 30 : '') });
+    f[k] = i; m.append(el('label', {}, l), i);
+  });
+  const nightChk = el('input', { type: 'checkbox' }); if (s.is_night) nightChk.checked = true;
+  m.append(el('label', { style: 'display:flex;align-items:center;gap:6px;text-transform:none' }, nightChk, ' Night shift'));
+  const save = el('button', {}, 'Save');
+  save.onclick = async () => {
+    const data = { branch_id: branchSel.value, is_night: nightChk.checked, eligible_designations: s.eligible_designations || [] };
+    ['name','start_time','end_time'].forEach(k => data[k] = f[k].value);
+    ['break_minutes','required_staff'].forEach(k => data[k] = Number(f[k].value));
+    try {
+      if (s.id) await api('/shifts/' + s.id, { method: 'PUT', body: data });
+      else await api('/shifts', { method: 'POST', body: data });
+      closeModal(); render();
+    } catch (e) { showError(e.message); }
+  };
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  showModal(m);
+}
+
+async function PageRoster() {
+  const root = el('div');
+  const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
+
+  // Generate bar
+  const gen = el('div', { class: 'card' }, el('div', { class: 'row' }));
+  const wkInput = el('input', { type: 'date', value: fmtDate(mondayOf()) });
+  const genBtn = el('button', {}, 'Generate weekly roster');
+  genBtn.onclick = async () => {
+    genBtn.disabled = true; genBtn.textContent = 'Generating…';
+    try {
+      const r = await api('/roster/generate', { method: 'POST', body: { branch_id: branchId, week_start: wkInput.value } });
+      State._openRoster = r.id;
+      render();
+    } catch (e) { showError(e.message); }
+    finally { genBtn.disabled = false; genBtn.textContent = 'Generate weekly roster'; }
+  };
+  gen.firstChild.append(
+    el('div', {}, el('label', {}, 'Week starting (Monday)'), wkInput),
+    el('div', { style: 'display:flex;align-items:flex-end' }, genBtn),
+  );
+  root.append(gen);
+
+  // Existing rosters
+  const rosters = await api('/roster?branch_id=' + branchId);
+  const list = el('div', { class: 'card' }, el('h3', {}, 'Rosters'));
+  if (!rosters.length) list.append(el('div', { class: 'empty' }, 'No rosters yet'));
+  else {
+    const t = el('table');
+    t.append(el('thead', {}, el('tr', {}, el('th',{},'Week of'), el('th',{},'Status'), el('th',{},''))));
+    const tb = el('tbody');
+    rosters.forEach(r => tb.append(el('tr', {},
+      el('td', {}, fmtDate(r.week_start)),
+      el('td', {}, el('span', { class: `pill ${r.status === 'published' ? 'ok' : r.status === 'locked' ? 'info' : 'warn'}` }, r.status)),
+      el('td', {},
+        el('button', { class: 'ghost', onclick: () => { State._openRoster = r.id; render(); } }, 'Open'),
+        ' ',
+        r.status === 'draft' ? el('button', { onclick: () => publishRoster(r.id) }, 'Publish') : null,
+        r.status === 'published' ? el('button', { class: 'secondary', onclick: () => lockRoster(r.id) }, 'Lock') : null,
+      ),
+    )));
+    t.append(tb); list.append(t);
+  }
+  root.append(list);
+
+  if (State._openRoster) {
+    const detail = await api('/roster/' + State._openRoster);
+    root.append(renderRosterGrid(detail));
+  }
+  return root;
+}
+async function publishRoster(id) { try { await api('/roster/' + id + '/publish', { method: 'POST' }); render(); } catch (e) { showError(e.message); } }
+async function lockRoster(id) { if (!confirm('Lock this roster? It cannot be edited after.')) return; try { await api('/roster/' + id + '/lock', { method: 'POST' }); render(); } catch (e) { showError(e.message); } }
+
+function renderRosterGrid(roster) {
+  const card = el('div', { class: 'card' });
+  card.append(el('h3', {}, `Week of ${fmtDate(roster.week_start)} — ${roster.branch?.name || ''}`));
+  const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(roster.week_start); d.setDate(d.getDate() + i); return d; });
+  const grid = el('div', { class: 'roster-grid' });
+  grid.append(el('div', { class: 'head' }, 'Shift'));
+  days.forEach(d => grid.append(el('div', { class: 'head' }, ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][(d.getDay()+6)%7] + ' ' + (d.getDate()))));
+
+  // group duties by shift_type id, then by date
+  const byShift = {};
+  roster.duties.forEach(d => {
+    const key = d.shift_type.id;
+    if (!byShift[key]) byShift[key] = { name: d.shift_type.name, time: `${d.shift_type.start_time}-${d.shift_type.end_time}`, days: {} };
+    const dk = fmtDate(d.date);
+    if (!byShift[key].days[dk]) byShift[key].days[dk] = [];
+    byShift[key].days[dk].push(d);
+  });
+
+  Object.values(byShift).forEach(sh => {
+    grid.append(el('div', {}, el('div', { style: 'font-weight:600' }, sh.name), el('div', { class: 'small' }, sh.time)));
+    days.forEach(d => {
+      const dk = fmtDate(d);
+      const cell = el('div');
+      (sh.days[dk] || []).forEach(duty => {
+        const c = el('div', { class: 'duty-cell' },
+          el('div', { class: 'who' }, duty.staff?.full_name || '—'),
+        );
+        cell.append(c);
+      });
+      grid.append(cell);
+    });
+  });
+
+  card.append(grid);
+  return card;
+}
+
+async function PageSwaps() {
+  const root = el('div');
+  const list = await api('/swaps');
+  const card = el('div', { class: 'card' }, el('h3', {}, 'Swap requests'));
+  if (!list.length) card.append(el('div', { class: 'empty' }, 'No swap requests'));
+  else {
+    const t = el('table');
+    t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Shift'), el('th',{},'From → To'), el('th',{},'Status'), el('th',{},'Warnings'), el('th',{},''))));
+    const tb = el('tbody');
+    list.forEach(s => {
+      const actions = el('td');
+      if (State.user.role === 'staff' && s.receiver_id === State.user.staff_id && s.status === 'pending_peer') {
+        actions.append(
+          el('button', { onclick: () => respondSwap(s.id, true) }, 'Accept'), ' ',
+          el('button', { class: 'danger', onclick: () => respondSwap(s.id, false) }, 'Reject'),
+        );
+      } else if (['super_admin','branch_manager'].includes(State.user.role) && s.status === 'pending_manager') {
+        actions.append(
+          el('button', { onclick: () => decideSwap(s.id, true) }, 'Approve'), ' ',
+          el('button', { class: 'danger', onclick: () => decideSwap(s.id, false) }, 'Reject'),
+        );
+      }
+      tb.append(el('tr', {},
+        el('td', {}, fmtDate(s.from_duty.date)),
+        el('td', {}, s.from_duty.shift_type.name),
+        el('td', {}, `${s.requester.full_name} → ${s.receiver.full_name}`),
+        el('td', {}, el('span', { class: `pill ${s.status === 'approved' ? 'ok' : s.status === 'rejected' || s.status === 'peer_rejected' ? 'bad' : 'warn'}` }, s.status)),
+        el('td', {}, (s.rule_warnings || []).join('; ') || '—'),
+        actions,
+      ));
+    });
+    t.append(tb); card.append(t);
+  }
+  root.append(card);
+  return root;
+}
+async function respondSwap(id, accept) { try { await api('/swaps/' + id + '/respond', { method: 'POST', body: { accept } }); render(); } catch (e) { showError(e.message); } }
+async function decideSwap(id, approve) {
+  const reason = approve ? null : prompt('Reason for rejection?') || '';
+  try { await api('/swaps/' + id + '/decide', { method: 'POST', body: { approve, reason } }); render(); } catch (e) { showError(e.message); }
+}
+
+async function PageAttendance() {
+  const root = el('div');
+  const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
+  const today = new Date(); const from = new Date(today); from.setDate(from.getDate() - 30);
+  const list = await api(`/attendance?branch_id=${branchId}&from=${fmtDate(from)}&to=${fmtDate(today)}`);
+  const card = el('div', { class: 'card' }, el('h3', {}, 'Attendance (last 30 days)'));
+  const t = el('table');
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Staff'), el('th',{},'Shift'), el('th',{},'Status'), el('th',{},'Late'), el('th',{},'OT hrs'))));
+  const tb = el('tbody');
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No records')));
+  list.forEach(a => tb.append(el('tr', {},
+    el('td', {}, fmtDate(a.date)),
+    el('td', {}, a.staff?.full_name || '—'),
+    el('td', {}, a.duty?.shift_type?.name || '—'),
+    el('td', {}, el('span', { class: `pill ${a.status === 'worked' ? 'ok' : a.status === 'absent' ? 'bad' : 'warn'}` }, a.status)),
+    el('td', {}, a.late_minutes ? `${a.late_minutes}m` : '—'),
+    el('td', {}, a.overtime_hours ? Number(a.overtime_hours).toFixed(1) : '—'),
+  )));
+  t.append(tb); card.append(t); root.append(card);
+  return root;
+}
+
+async function PageLeaves() {
+  const root = el('div');
+  const list = await api('/leaves');
+  const card = el('div', { class: 'card' });
+  card.append(el('div', { style: 'display:flex;justify-content:space-between' },
+    el('h3', { style: 'margin:0' }, 'Leave requests'),
+    el('button', { onclick: () => openLeaveModal() }, '+ Request leave')));
+  const t = el('table');
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'Staff'), el('th',{},'From'), el('th',{},'To'), el('th',{},'Reason'), el('th',{},'Status'), el('th',{},''))));
+  const tb = el('tbody');
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 6, class: 'empty' }, 'No leave requests')));
+  list.forEach(l => {
+    const actions = el('td');
+    if (['super_admin','branch_manager'].includes(State.user.role) && l.status === 'pending') {
+      actions.append(
+        el('button', { onclick: () => decideLeave(l.id, true) }, 'Approve'), ' ',
+        el('button', { class: 'danger', onclick: () => decideLeave(l.id, false) }, 'Reject'),
+      );
+    }
+    tb.append(el('tr', {},
+      el('td', {}, l.staff.full_name),
+      el('td', {}, fmtDate(l.from_date)), el('td', {}, fmtDate(l.to_date)),
+      el('td', {}, l.reason || '—'),
+      el('td', {}, el('span', { class: `pill ${l.status === 'approved' ? 'ok' : l.status === 'rejected' ? 'bad' : 'warn'}` }, l.status)),
+      actions,
+    ));
+  });
+  t.append(tb); card.append(t); root.append(card);
+  return root;
+}
+function openLeaveModal() {
+  const m = el('div', { class: 'modal' }, el('h3', {}, 'Request leave'));
+  const from = el('input', { type: 'date' });
+  const to = el('input', { type: 'date' });
+  const reason = el('textarea', { rows: 3 });
+  m.append(el('label', {}, 'From'), from, el('label', {}, 'To'), to, el('label', {}, 'Reason'), reason);
+  const save = el('button', {}, 'Submit');
+  save.onclick = async () => {
+    try { await api('/leaves', { method: 'POST', body: { from_date: from.value, to_date: to.value, reason: reason.value } }); closeModal(); render(); }
+    catch (e) { showError(e.message); }
+  };
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), save));
+  showModal(m);
+}
+async function decideLeave(id, approve) { try { await api('/leaves/' + id + '/decide', { method: 'POST', body: { approve } }); render(); } catch (e) { showError(e.message); } }
+
+async function PagePayroll() {
+  const root = el('div');
+  const branchId = State.user.role === 'super_admin' ? State.selectedBranchId : State.user.branch_id;
+  const now = new Date();
+  const yIn = el('input', { type: 'number', value: now.getFullYear(), style: 'max-width:120px' });
+  const mIn = el('input', { type: 'number', min: 1, max: 12, value: now.getMonth() + 1, style: 'max-width:80px' });
+  const card = el('div', { class: 'card' });
+  card.append(el('h3', {}, 'Payroll export'),
+    el('div', { class: 'row' },
+      el('div', {}, el('label', {}, 'Year'), yIn),
+      el('div', {}, el('label', {}, 'Month'), mIn),
+      el('div', { style: 'display:flex;align-items:flex-end;gap:8px' },
+        el('button', { onclick: () => preview() }, 'Preview'),
+        el('button', { class: 'secondary', onclick: () => download('xlsx') }, 'Download .xlsx'),
+        el('button', { class: 'secondary', onclick: () => download('csv') }, 'Download .csv'),
+      ),
+    ));
+  const previewArea = el('div'); card.append(previewArea);
+
+  async function preview() {
+    previewArea.innerHTML = '';
+    try {
+      const rows = await api(`/payroll/preview?branch_id=${branchId}&year=${yIn.value}&month=${mIn.value}`);
+      if (!rows.length) { previewArea.append(el('div', { class: 'empty' }, 'No attendance records for this period')); return; }
+      const t = el('table');
+      t.append(el('thead', {}, el('tr', {},
+        el('th',{},'Emp'), el('th',{},'Name'), el('th',{},'Branch'),
+        el('th',{},'Sched'), el('th',{},'Worked'), el('th',{},'Late'), el('th',{},'Absent'), el('th',{},'OT hrs'))));
+      const tb = el('tbody');
+      rows.forEach(r => tb.append(el('tr', {},
+        el('td', {}, r.employee_id), el('td', {}, r.name), el('td', {}, r.branch),
+        el('td', {}, r.scheduled_days), el('td', {}, r.worked_days), el('td', {}, r.late_count), el('td', {}, r.absences),
+        el('td', {}, r.overtime_hours.toFixed(1)),
+      )));
+      t.append(tb); previewArea.append(t);
+    } catch (e) { previewArea.append(el('div', { class: 'err' }, e.message)); }
+  }
+  async function download(format) {
+    try {
+      const blob = await apiBlob(`/payroll/export.${format}?branch_id=${branchId}&year=${yIn.value}&month=${mIn.value}`);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = `payroll_${yIn.value}_${String(mIn.value).padStart(2,'0')}.${format}`; a.click();
+    } catch (e) { showError(e.message); }
+  }
+
+  root.append(card);
+  return root;
+}
+
+async function PageAudit() {
+  const root = el('div');
+  const branchId = State.user.role === 'super_admin' ? (State.selectedBranchId || '') : State.user.branch_id;
+  const list = await api('/audit?branch_id=' + branchId);
+  const card = el('div', { class: 'card' }, el('h3', {}, 'Audit log'));
+  const t = el('table');
+  t.append(el('thead', {}, el('tr', {}, el('th',{},'When'), el('th',{},'Who'), el('th',{},'Action'), el('th',{},'Entity'), el('th',{},'Reason'))));
+  const tb = el('tbody');
+  if (!list.length) tb.append(el('tr', {}, el('td', { colspan: 5, class: 'empty' }, 'No log entries')));
+  list.forEach(l => tb.append(el('tr', {},
+    el('td', {}, fmtDateTime(l.created_at)),
+    el('td', {}, l.user?.name || '—'),
+    el('td', {}, el('span', { class: 'pill info' }, l.action)),
+    el('td', {}, `${l.entity}${l.entity_id ? '#' + l.entity_id.slice(0,8) : ''}`),
+    el('td', {}, l.reason || '—'),
+  )));
+  t.append(tb); card.append(t); root.append(card);
+  return root;
+}
+
+async function PageMyRoster() {
+  const root = el('div');
+  const list = await api('/roster/me/upcoming');
+  const card = el('div', { class: 'card' }, el('h3', {}, 'My upcoming duties'));
+  if (!list.length) card.append(el('div', { class: 'empty' }, 'Nothing scheduled. Check back after the next roster is published.'));
+  else {
+    const t = el('table');
+    t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Shift'), el('th',{},'Time'), el('th',{},''))));
+    const tb = el('tbody');
+    list.forEach(d => tb.append(el('tr', {},
+      el('td', {}, fmtDate(d.date)),
+      el('td', {}, d.shift_type.name),
+      el('td', {}, `${d.shift_type.start_time} – ${d.shift_type.end_time}`),
+      el('td', {},
+        el('button', { class: 'ghost', onclick: () => clockIn(d.id) }, 'Clock in'), ' ',
+        el('button', { class: 'ghost', onclick: () => clockOut(d.id) }, 'Clock out'), ' ',
+        el('button', { class: 'secondary', onclick: () => requestSwap(d.id) }, 'Request swap'),
+      ),
+    )));
+    t.append(tb); card.append(t);
+  }
+  root.append(card);
+  return root;
+}
+async function clockIn(duty_id) { try { await api('/attendance/clock-in', { method: 'POST', body: { duty_id } }); alert('Clocked in'); } catch(e){ showError(e.message);} }
+async function clockOut(duty_id) { try { await api('/attendance/clock-out', { method: 'POST', body: { duty_id } }); alert('Clocked out'); } catch(e){ showError(e.message);} }
+async function requestSwap(duty_id) {
+  const peers = await api('/staff?branch_id=' + State.user.branch_id);
+  const m = el('div', { class: 'modal' }, el('h3', {}, 'Request swap'));
+  const sel = el('select');
+  peers.filter(p => p.id !== State.user.staff_id).forEach(p => sel.append(el('option', { value: p.id }, p.full_name)));
+  const reason = el('textarea', { rows: 2, placeholder: 'Reason (optional)' });
+  m.append(el('label', {}, 'Swap with'), sel, el('label', {}, 'Reason'), reason);
+  const send = el('button', {}, 'Send request');
+  send.onclick = async () => {
+    try { await api('/swaps', { method: 'POST', body: { from_duty_id: duty_id, receiver_staff_id: sel.value, reason: reason.value } }); closeModal(); render(); }
+    catch (e) { showError(e.message); }
+  };
+  m.append(el('div', { class: 'actions' }, el('button', { class: 'ghost', onclick: closeModal }, 'Cancel'), send));
+  showModal(m);
+}
+
+async function PageMyAttendance() {
+  const root = el('div');
+  const j = await api('/attendance/me/summary');
+  const card = el('div', { class: 'card' }, el('h3', {}, `My attendance — ${j.month || ''}/${j.year || ''}`));
+  const grid = el('div', { class: 'grid cols-4' });
+  Object.entries(j.summary || {}).forEach(([k,v]) => {
+    grid.append(el('div', { class: 'card' }, el('div', { class: 'kpi' }, typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(1)) : v), el('div', { class: 'kpi-label' }, k.replace('_', ' '))));
+  });
+  card.append(grid);
+  root.append(card);
+  return root;
+}
+
+/* -------------------- Render -------------------- */
+const PAGES = {
+  dashboard: PageDashboard,
+  branches: PageBranches,
+  staff: PageStaff,
+  shifts: PageShifts,
+  roster: PageRoster,
+  swaps: PageSwaps,
+  attendance: PageAttendance,
+  leaves: PageLeaves,
+  payroll: PagePayroll,
+  audit: PageAudit,
+  'my-roster': PageMyRoster,
+  'my-swaps': PageSwaps,
+  'my-attendance': PageMyAttendance,
+};
+
+async function render() {
+  const app = $('app');
+  app.innerHTML = '';
+  if (!State.token) { app.append(LoginView()); return; }
+  if (!State.user) { try { await loadBootstrap(); } catch { logout(); return; } }
+  if (!State.user) { app.append(LoginView()); return; }
+
+  app.append(Header(), Nav());
+  const main = el('main');
+  app.append(main);
+  main.append(el('div', { class: 'small' }, 'Loading…'));
+
+  const fn = PAGES[State.page] || PAGES[NAV_BY_ROLE[State.user.role][0]];
+  try {
+    const view = await fn();
+    main.innerHTML = '';
+    main.append(view);
+  } catch (e) {
+    main.innerHTML = '';
+    main.append(el('div', { class: 'card err' }, 'Error: ' + e.message));
+  }
+
+  if (State.modal) app.append(el('div', { class: 'modal-bg', onclick: (e) => { if (e.target.className === 'modal-bg') closeModal(); } }, State.modal));
+}
+
+(async () => {
+  if (State.token) { try { await loadBootstrap(); } catch {} }
+  if (State.user) State.page = NAV_BY_ROLE[State.user.role][0];
+  render();
+})();
+</script>
+</body>
+</html>

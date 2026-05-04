@@ -1,0 +1,316 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  super_admin
+  branch_manager
+  staff
+}
+
+enum EmploymentType {
+  full_time
+  part_time
+  intern
+  contract
+}
+
+enum RosterStatus {
+  draft
+  published
+  locked
+}
+
+enum DutyStatus {
+  scheduled
+  worked
+  late
+  absent
+  on_leave
+  swapped
+  overtime
+  holiday_worked
+}
+
+enum SwapStatus {
+  pending_peer
+  peer_rejected
+  pending_manager
+  approved
+  rejected
+  cancelled
+}
+
+enum LeaveStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+enum NotificationChannel {
+  in_app
+  email
+  whatsapp
+  sms
+}
+
+model Branch {
+  id                  String   @id @default(uuid())
+  name                String   @unique
+  slug                String   @unique
+  location            String?
+  operating_days      Int[]    // 0=Sun .. 6=Sat
+  open_time           String?  // "09:00"
+  close_time          String?  // "23:00"
+  active              Boolean  @default(true)
+  // duty rules
+  max_hours_per_day   Int      @default(10)
+  max_hours_per_week  Int      @default(48)
+  max_shifts_per_week Int      @default(6)
+  min_rest_hours      Int      @default(10)
+  weekend_days        Int[]    // [5,6] = Fri/Sat
+  fixed_off_day       Int?     // optional org-wide off
+  overtime_after_hrs  Int      @default(8)
+  night_shift_start   String?  // "22:00"
+  night_shift_end     String?  // "06:00"
+  notify_email        String?
+  notify_whatsapp     String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  users          User[]
+  staff          Staff[]
+  shift_types    ShiftType[]
+  rosters        Roster[]
+  attendance     Attendance[]
+  audit_logs     AuditLog[]
+  holidays       Holiday[]
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  role          Role
+  branch_id     String?
+  branch        Branch?  @relation(fields: [branch_id], references: [id])
+  active        Boolean  @default(true)
+  staff_id      String?  @unique
+  staff         Staff?   @relation(fields: [staff_id], references: [id])
+  last_login    DateTime?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  refresh_tokens   RefreshToken[]
+  notifications    Notification[]
+  audit_logs       AuditLog[]
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  jti        String   @unique
+  expires_at DateTime
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now())
+}
+
+model Staff {
+  id                  String          @id @default(uuid())
+  employee_id         String          @unique
+  branch_id           String
+  branch              Branch          @relation(fields: [branch_id], references: [id])
+  full_name           String
+  designation         String?
+  employment_type     EmploymentType  @default(full_time)
+  email               String?
+  phone               String?
+  weekly_hour_limit   Int             @default(48)
+  eligible_shift_ids  String[]        // ShiftType ids
+  unavailable_days    Int[]           // 0..6
+  hourly_rate         Float?
+  base_salary         Float?
+  active              Boolean         @default(true)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+
+  user            User?
+  duties          Duty[]
+  swaps_requested Swap[]    @relation("requester")
+  swaps_received  Swap[]    @relation("receiver")
+  leaves          Leave[]
+  attendance      Attendance[]
+}
+
+model ShiftType {
+  id                String   @id @default(uuid())
+  branch_id         String
+  branch            Branch   @relation(fields: [branch_id], references: [id])
+  name              String
+  start_time        String   // "09:00"
+  end_time          String   // "17:00"
+  break_minutes     Int      @default(60)
+  required_staff    Int      @default(1)
+  eligible_designations String[]
+  is_night          Boolean  @default(false)
+  active            Boolean  @default(true)
+  created_at        DateTime @default(now())
+
+  duties Duty[]
+
+  @@unique([branch_id, name])
+}
+
+model Roster {
+  id           String       @id @default(uuid())
+  branch_id    String
+  branch       Branch       @relation(fields: [branch_id], references: [id])
+  week_start   DateTime     // Monday 00:00 local
+  status       RosterStatus @default(draft)
+  generated_by String?
+  published_at DateTime?
+  locked_at    DateTime?
+  notes        String?
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+
+  duties Duty[]
+
+  @@unique([branch_id, week_start])
+}
+
+model Duty {
+  id            String     @id @default(uuid())
+  roster_id     String
+  roster        Roster     @relation(fields: [roster_id], references: [id], onDelete: Cascade)
+  staff_id      String
+  staff         Staff      @relation(fields: [staff_id], references: [id])
+  shift_type_id String
+  shift_type    ShiftType  @relation(fields: [shift_type_id], references: [id])
+  date          DateTime   // YYYY-MM-DD (date only)
+  start_at      DateTime
+  end_at        DateTime
+  status        DutyStatus @default(scheduled)
+  is_overtime   Boolean    @default(false)
+  is_holiday    Boolean    @default(false)
+  notes         String?
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  swaps_from Swap[] @relation("from_duty")
+  swaps_to   Swap[] @relation("to_duty")
+  attendance Attendance?
+
+  @@index([staff_id, date])
+  @@index([roster_id, date])
+}
+
+model Swap {
+  id            String     @id @default(uuid())
+  from_duty_id  String
+  from_duty     Duty       @relation("from_duty", fields: [from_duty_id], references: [id])
+  to_duty_id    String?
+  to_duty       Duty?      @relation("to_duty", fields: [to_duty_id], references: [id])
+  requester_id  String
+  requester     Staff      @relation("requester", fields: [requester_id], references: [id])
+  receiver_id   String
+  receiver      Staff      @relation("receiver", fields: [receiver_id], references: [id])
+  status        SwapStatus @default(pending_peer)
+  reason        String?
+  peer_at       DateTime?
+  manager_at    DateTime?
+  manager_id    String?
+  rule_warnings String[]
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+}
+
+model Leave {
+  id          String      @id @default(uuid())
+  staff_id    String
+  staff       Staff       @relation(fields: [staff_id], references: [id])
+  from_date   DateTime
+  to_date     DateTime
+  reason      String?
+  status      LeaveStatus @default(pending)
+  decided_by  String?
+  decided_at  DateTime?
+  created_at  DateTime    @default(now())
+}
+
+model Attendance {
+  id              String     @id @default(uuid())
+  duty_id         String     @unique
+  duty            Duty       @relation(fields: [duty_id], references: [id])
+  staff_id        String
+  staff           Staff      @relation(fields: [staff_id], references: [id])
+  branch_id       String
+  branch          Branch     @relation(fields: [branch_id], references: [id])
+  date            DateTime
+  scheduled_start DateTime
+  scheduled_end   DateTime
+  actual_start    DateTime?
+  actual_end      DateTime?
+  status          DutyStatus
+  late_minutes    Int        @default(0)
+  overtime_hours  Float      @default(0)
+  remarks         String?
+  approved_by     String?
+  approved_at     DateTime?
+  created_at      DateTime   @default(now())
+
+  @@index([branch_id, date])
+  @@index([staff_id, date])
+}
+
+model Holiday {
+  id        String   @id @default(uuid())
+  branch_id String?
+  branch    Branch?  @relation(fields: [branch_id], references: [id])
+  date      DateTime
+  name      String
+  pays_extra Boolean @default(true)
+
+  @@unique([branch_id, date])
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  user_id   String
+  user      User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  channel   NotificationChannel @default(in_app)
+  title     String
+  body      String
+  url       String?
+  read_at   DateTime?
+  sent_at   DateTime?
+  created_at DateTime           @default(now())
+
+  @@index([user_id, read_at])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  user_id     String?
+  user        User?    @relation(fields: [user_id], references: [id])
+  branch_id   String?
+  branch      Branch?  @relation(fields: [branch_id], references: [id])
+  action      String   // "roster.publish", "swap.approve", etc.
+  entity      String   // "Roster", "Duty", "Swap", "Staff", "ShiftType", "Branch"
+  entity_id   String?
+  old_value   Json?
+  new_value   Json?
+  reason      String?
+  created_at  DateTime @default(now())
+
+  @@index([branch_id, created_at])
+  @@index([entity, entity_id])
+}

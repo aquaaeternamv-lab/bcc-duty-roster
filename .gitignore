@@ -1,0 +1,8 @@
+node_modules/
+.env
+.DS_Store
+*.log
+backend/prisma/migrations/dev.db*
+.idea/
+.vscode/
+dist/
