@@ -46,16 +46,22 @@
   --gold: #d4a017;
   --gold-soft: #fdf4d3;
 
-  --shadow-sm: 0 1px 2px rgba(28,25,23,.04), 0 1px 1px rgba(28,25,23,.03);
-  --shadow: 0 1px 3px rgba(28,25,23,.05), 0 4px 12px rgba(28,25,23,.04);
-  --shadow-lg: 0 4px 12px rgba(28,25,23,.06), 0 24px 48px rgba(28,25,23,.08);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 1px rgba(15,23,42,.03);
+  --shadow: 0 1px 3px rgba(15,23,42,.05), 0 4px 12px rgba(15,23,42,.04);
+  --shadow-lg: 0 4px 16px rgba(15,23,42,.06), 0 24px 48px rgba(15,23,42,.10);
 
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 16px;
 
-  --t: cubic-bezier(.4,0,.2,1);
-  --tt: 200ms var(--t);
+  /* Motion tokens — Emil's principles: ease-out, under 300ms */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);    /* strong ease-out, instant feedback */
+  --ease-out-soft: cubic-bezier(0.32, 0.72, 0, 1); /* spring-feel without bounce */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* subtle overshoot */
+  --t: var(--ease-out);
+  --tt: 180ms var(--ease-out);
+  --t-press: 100ms var(--ease-out);
+  --t-modal: 220ms var(--ease-out-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -96,29 +102,35 @@ button {
   background: var(--text); color: var(--surface);
   border: 1px solid var(--text); padding: 10px 18px;
   border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;
-  transition: all var(--tt);
+  /* Emil: specify properties, never `all`; pressed scale gives instant tactile feedback */
+  transition: transform var(--t-press), background-color 150ms var(--ease-out), border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
   box-shadow: var(--shadow-sm);
+  will-change: transform;
 }
-button:hover { background: var(--accent-strong); border-color: var(--accent-strong); transform: translateY(-1px); box-shadow: var(--shadow); }
-button:active { transform: translateY(0); }
+button:hover { background: var(--accent-strong); border-color: var(--accent-strong); box-shadow: var(--shadow); }
+button:active { transform: scale(0.97); }
 button.secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); box-shadow: none; }
-button.secondary:hover { background: var(--bg-tint); border-color: var(--text-2); transform: none; }
+button.secondary:hover { background: var(--bg-tint); border-color: var(--text-2); }
 button.ghost { background: transparent; color: var(--text-2); border-color: transparent; box-shadow: none; padding: 6px 12px; }
-button.ghost:hover { background: var(--bg-tint); color: var(--text); transform: none; box-shadow: none; }
+button.ghost:hover { background: var(--bg-tint); color: var(--text); }
 button.accent { background: var(--accent); border-color: var(--accent); }
 button.accent:hover { background: var(--accent-strong); }
 button.danger { background: var(--surface); color: var(--red); border-color: #f0d6d4; box-shadow: none; }
-button.danger:hover { background: #fbeae8; border-color: #e7b9b5; transform: none; }
-button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+button.danger:hover { background: #fbeae8; border-color: #e7b9b5; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:disabled:active { transform: none; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 input, select, textarea {
   background: var(--surface); border: 1px solid var(--border-strong);
   padding: 10px 12px; border-radius: var(--radius-sm); width: 100%;
-  transition: border-color var(--tt), box-shadow var(--tt);
+  transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
 }
 input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
 }
+/* Subtle press feedback on selects too */
+select:active { transform: scale(0.99); }
 label {
   display: block; margin: 14px 0 6px;
   color: var(--muted); font-size: 11px; font-weight: 600;
@@ -141,9 +153,11 @@ tbody tr:hover { background: var(--surface-2); }
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 22px;
   margin-bottom: 18px; box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--tt);
+  transition: box-shadow 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
-.card:hover { box-shadow: var(--shadow); }
+@media (hover: hover) {
+  .card:hover { box-shadow: var(--shadow); border-color: var(--border-strong); }
+}
 .card.tight { padding: 16px; }
 .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
 
@@ -471,28 +485,95 @@ html { -webkit-text-size-adjust: 100%; }
 }
 .duty-cell:hover { background: #d8e8e0; border-color: #b8d4c5; }
 
-/* Modal */
+/* Modal — Emil: never animate from scale(0); start from 0.96 with opacity */
 .modal-bg {
-  position: fixed; inset: 0; background: rgba(28,25,23,0.4);
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  position: fixed; inset: 0; background: rgba(15,23,42,0.45);
+  backdrop-filter: blur(6px) saturate(120%); -webkit-backdrop-filter: blur(6px) saturate(120%);
   display: grid; place-items: center; z-index: 50; padding: 20px;
-  animation: fade-in 200ms var(--t);
+  animation: bg-fade-in 180ms var(--ease-out);
 }
 .modal {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 28px;
   max-width: 520px; width: 100%; max-height: 90vh; overflow: auto;
   box-shadow: var(--shadow-lg);
-  animation: slide-up 250ms var(--t);
+  /* Modals stay center-origin per Emil's rule */
+  transform-origin: center;
+  animation: modal-in var(--t-modal);
 }
 .modal h3 { margin-bottom: 4px; font-size: 20px; }
 .modal .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
 
-/* Animations */
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slide-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.fade-in { animation: fade-in 250ms var(--t); }
+/* Animations — short, ease-out, never from scale(0) */
+@keyframes bg-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fade-in 200ms var(--ease-out) both; }
+
+/* Stagger children entrances for grids — feels alive without being slow */
+.stagger > * { animation: fade-in 280ms var(--ease-out) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(7) { animation-delay: 240ms; }
+.stagger > *:nth-child(8) { animation-delay: 280ms; }
+
+/* Toast — Sonner-style stack, bottom-center */
+.toast-host {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  z-index: 100; display: flex; flex-direction: column-reverse; gap: 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  background: var(--text); color: var(--surface);
+  padding: 12px 16px; border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.18), 0 4px 12px rgba(15,23,42,0.08);
+  font-size: 13.5px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  min-width: 240px; max-width: 380px;
+  animation: toast-in 280ms var(--ease-out-soft);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.toast .toast-icon {
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+}
+.toast.success .toast-icon { background: var(--bcc-green); color: #fff; }
+.toast.error .toast-icon { background: var(--bcc-red); color: #fff; }
+.toast.info .toast-icon { background: var(--bcc-blue); color: #fff; }
+.toast.leaving { animation: toast-out 180ms var(--ease-out) both; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(8px) scale(0.96); }
+}
+
+/* Skeleton loader — perceived perf */
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+.skel {
+  background: linear-gradient(90deg, var(--bg-tint) 0%, #f0f1f5 50%, var(--bg-tint) 100%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 6px;
+  display: inline-block;
+}
+.skel-line { height: 12px; width: 100%; margin: 6px 0; }
+.skel-row { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+.skel-row .skel { flex: 1; }
+.skel-row .skel:nth-child(1) { flex: 0 0 30%; }
+.skel-row .skel:nth-child(3) { flex: 0 0 18%; }
 
 /* Misc */
 .small { font-size: 12px; color: var(--muted); }
@@ -619,8 +700,48 @@ const niceDate = (d) => new Date(d).toLocaleDateString(undefined, { weekday: 'sh
 function mondayOf(d = new Date()) { const x = new Date(d); const dow = (x.getDay() + 6) % 7; x.setDate(x.getDate() - dow); x.setHours(0,0,0,0); return x; }
 function showModal(content) { State.modal = content; render(); }
 function closeModal() { State.modal = null; render(); }
-function showError(msg) { alert(msg); }
 function initials(name) { return (name || '').split(' ').map(s => s[0]).filter(Boolean).slice(0,2).join('').toUpperCase(); }
+
+/* Sonner-style toast — Emil: ease-out, under 300ms, interruptible via CSS transition */
+function toastHost() {
+  let host = document.getElementById('toast-host');
+  if (!host) { host = document.createElement('div'); host.id = 'toast-host'; host.className = 'toast-host'; document.body.appendChild(host); }
+  return host;
+}
+function toast(msg, kind = 'info', ms = 3500) {
+  const host = toastHost();
+  const t = document.createElement('div');
+  t.className = `toast ${kind}`;
+  const icon = document.createElement('span');
+  icon.className = 'toast-icon';
+  icon.innerHTML = kind === 'success' ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+                : kind === 'error' ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+                : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><line x1="12" y1="6" x2="12" y2="14"/><circle cx="12" cy="18" r="0.5"/></svg>';
+  t.append(icon);
+  const text = document.createElement('span');
+  text.textContent = msg;
+  t.append(text);
+  host.appendChild(t);
+  const remove = () => { t.classList.add('leaving'); setTimeout(() => t.remove(), 200); };
+  setTimeout(remove, ms);
+  t.addEventListener('click', remove);
+}
+function showError(msg) { toast(msg, 'error'); }
+function showSuccess(msg) { toast(msg, 'success'); }
+
+/* Animated number counter — Emil: short, ease-out (300ms feels fast yet noticeable) */
+function animateCounter(elNode, target, duration = 600) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { elNode.textContent = String(target); return; }
+  const start = 0; const startTime = performance.now();
+  function step(t) {
+    const p = Math.min(1, (t - startTime) / duration);
+    const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+    elNode.textContent = String(Math.round(start + (target - start) * eased));
+    if (p < 1) requestAnimationFrame(step);
+    else elNode.textContent = String(target);
+  }
+  requestAnimationFrame(step);
+}
 
 /* BCC logo mark — 4 interlocking quadrants (red, yellow, blue, green) */
 function BccMark(size = 36) {
@@ -687,6 +808,7 @@ function LoginView() {
       State.selectedBranchId = j.user.branch_id || null;
       await loadBootstrap();
       render();
+      setTimeout(() => showSuccess(`Welcome, ${j.user.name.split(' ')[0]}`), 100);
     } catch (e) {
       errBox.append(el('div', { class: 'err' }, e.message));
       submit.disabled = false; submit.textContent = 'Sign in';
@@ -722,15 +844,14 @@ async function loadBootstrap() {
 
 /* -------------------- Header / Nav -------------------- */
 const NAV_BY_ROLE = {
-  super_admin:    ['dashboard','branches','staff','shifts','roster','swaps','attendance','leaves','payroll','audit'],
-  branch_manager: ['dashboard','staff','shifts','roster','swaps','attendance','leaves','payroll'],
-  staff:          ['my-roster','my-swaps','my-attendance','leaves'],
+  super_admin:    ['dashboard','branches','staff','shifts','roster','swaps','audit'],
+  branch_manager: ['dashboard','staff','shifts','roster','swaps'],
+  staff:          ['my-roster','my-swaps'],
 };
 const PAGE_LABELS = {
   'dashboard': 'Dashboard', 'branches': 'Branches', 'staff': 'Staff', 'shifts': 'Shifts',
-  'roster': 'Roster', 'swaps': 'Swaps', 'attendance': 'Attendance', 'leaves': 'Leaves',
-  'payroll': 'Payroll', 'audit': 'Audit',
-  'my-roster': 'My Roster', 'my-swaps': 'My Swaps', 'my-attendance': 'My Attendance',
+  'roster': 'Roster', 'swaps': 'Swaps', 'audit': 'Audit',
+  'my-roster': 'My Roster', 'my-swaps': 'My Swaps',
 };
 
 function Header() {
@@ -784,24 +905,27 @@ async function PageDashboard() {
   const root = el('div', { class: 'fade-in' });
   root.append(SectionHead('Overview', 'Today at a glance', 'Live metrics across branches and pending actions awaiting decision.'));
 
-  const grid = el('div', { class: 'grid cols-4' });
+  const grid = el('div', { class: 'grid cols-4 stagger' });
   try {
-    const [staff, swaps, rosters, leaves] = await Promise.all([
+    const [staff, swaps, rosters, shifts] = await Promise.all([
       api('/staff' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id)),
       api('/swaps?status=pending_manager'),
       api('/roster' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id)),
-      api('/leaves?status=pending'),
+      api('/shifts' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id)),
     ]);
-    const k = (label, val, cls = 'highlight') => el('div', { class: 'card tight' },
-      el('div', { class: `kpi-card ${cls}` },
-        el('div', { class: 'kpi accent' }, String(val)),
-        el('div', { class: 'kpi-label' }, label),
-      ),
-    );
+    const k = (label, val, cls = 'highlight') => {
+      const numEl = el('div', { class: 'kpi accent' }, '0');
+      const card = el('div', { class: 'card tight' },
+        el('div', { class: `kpi-card ${cls}` }, numEl, el('div', { class: 'kpi-label' }, label)),
+      );
+      animateCounter(numEl, val);
+      return card;
+    };
+    const branchesCount = State.user.role === 'super_admin' ? State.branches.length : 1;
     grid.append(
       k('Total staff', staff.length, 'highlight'),
+      k('Active branches', branchesCount, 'green'),
       k('Pending swaps', swaps.length, swaps.length ? 'warn' : 'highlight'),
-      k('Pending leaves', leaves.length, leaves.length ? 'warn' : 'highlight'),
       k('Published rosters', rosters.filter(r => r.status === 'published').length, 'gold'),
     );
   } catch (e) {
@@ -1336,8 +1460,8 @@ async function PageMyRoster() {
   root.append(card);
   return root;
 }
-async function clockIn(duty_id) { try { const a = await api('/attendance/clock-in', { method: 'POST', body: { duty_id } }); alert('Clocked in.' + (a.late_minutes ? ` (${a.late_minutes}m late)` : '')); } catch(e){ showError(e.message);} }
-async function clockOut(duty_id) { try { const a = await api('/attendance/clock-out', { method: 'POST', body: { duty_id } }); alert('Clocked out.' + (a.overtime_hours ? ` OT: ${a.overtime_hours.toFixed(1)}h` : '')); } catch(e){ showError(e.message);} }
+async function clockIn(duty_id) { try { const a = await api('/attendance/clock-in', { method: 'POST', body: { duty_id } }); showSuccess('Clocked in' + (a.late_minutes ? ` (${a.late_minutes}m late)` : '')); } catch(e){ showError(e.message);} }
+async function clockOut(duty_id) { try { const a = await api('/attendance/clock-out', { method: 'POST', body: { duty_id } }); showSuccess('Clocked out' + (a.overtime_hours ? ` · OT ${a.overtime_hours.toFixed(1)}h` : '')); } catch(e){ showError(e.message);} }
 async function requestSwap(duty_id) {
   const peers = await api('/staff?branch_id=' + State.user.branch_id);
   const m = el('div', { class: 'modal' }, el('h3', {}, 'Request swap'), el('p', { class: 'sub' }, 'Pick a colleague and add a brief reason.'));
@@ -1383,13 +1507,9 @@ const PAGES = {
   shifts: PageShifts,
   roster: PageRoster,
   swaps: PageSwaps,
-  attendance: PageAttendance,
-  leaves: PageLeaves,
-  payroll: PagePayroll,
   audit: PageAudit,
   'my-roster': PageMyRoster,
   'my-swaps': PageSwaps,
-  'my-attendance': PageMyAttendance,
 };
 
 async function render() {
