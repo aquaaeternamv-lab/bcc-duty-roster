@@ -29,30 +29,51 @@ const db = {
 
 /* ---------------- Seed ---------------- */
 function seed() {
-  const seedBranch = (name, slug, openTime = '09:00', closeTime = '22:00') => {
+  const seedBranch = (name, slug, opts = {}) => {
     const b = {
       id: uid(), name, slug, location: 'Maldives',
-      operating_days: [0,1,2,3,4,5,6], open_time: openTime, close_time: closeTime,
-      active: true, max_hours_per_day: 10, max_hours_per_week: 48, max_shifts_per_week: 6,
-      min_rest_hours: 10, weekend_days: [5,6], fixed_off_day: null,
+      operating_days: opts.operating_days || [0,1,2,3,4,5,6],
+      open_time: opts.open_time || '09:00', close_time: opts.close_time || '22:00',
+      active: true, max_hours_per_day: opts.max_hours_per_day || 10,
+      max_hours_per_week: 48, max_shifts_per_week: 6,
+      min_rest_hours: 10, weekend_days: [5,6], fixed_off_day: opts.fixed_off_day ?? null,
       overtime_after_hrs: 8, night_shift_start: null, night_shift_end: null,
-      notify_email: null, notify_whatsapp: null, created_at: now(), updated_at: now(),
+      notify_email: null, notify_whatsapp: null,
+      logo: opts.logo || null, accent: opts.accent || null,
+      created_at: now(), updated_at: now(),
     };
     db.branches.push(b); return b;
   };
 
-  const seed = seedBranch('SEED', 'seed', '08:00', '23:00');
-  const am = seedBranch('Authentic Maldives', 'authentic-maldives', '09:00', '22:00');
-  const ch = seedBranch('Creator Hub', 'creator-hub', '09:00', '21:00');
+  // SEED — closed Fridays (operating_days excludes 5=Fri); 3 actual shift bands
+  const seed = seedBranch('SEED', 'seed', {
+    open_time: '08:00', close_time: '22:00',
+    operating_days: [0,1,2,3,4,6], fixed_off_day: 5,
+    logo: '/assets/seed-logo.svg', accent: '#6286a6',
+  });
+  const am = seedBranch('Authentic Maldives', 'authentic-maldives', {
+    open_time: '09:00', close_time: '22:00',
+    logo: '/assets/am-logo.svg', accent: '#114b81',
+  });
+  const ch = seedBranch('Creator Hub', 'creator-hub', {
+    open_time: '09:00', close_time: '21:00',
+    accent: '#1f74c4',
+  });
 
-  const seedShift = (branch, name, start, end, required = 2, isNight = false) => {
+  const seedShift = (branch, name, start, end, required = 2, isNight = false, breakMin = 30) => {
     const s = { id: uid(), branch_id: branch.id, name, start_time: start, end_time: end,
-      break_minutes: 30, required_staff: required, eligible_designations: [],
+      break_minutes: breakMin, required_staff: required, eligible_designations: [],
       is_night: isNight, active: true, created_at: now() };
     db.shiftTypes.push(s); return s;
   };
 
-  [seed, am, ch].forEach(b => {
+  // SEED — real shift bands from operating roster
+  seedShift(seed, 'Morning',  '08:00', '16:00', 2, false, 30);
+  seedShift(seed, 'Floater',  '11:00', '19:00', 0, false, 30); // optional cover slot
+  seedShift(seed, 'Evening',  '14:00', '22:00', 2, false, 30);
+
+  // AM + CH keep generic shifts (will replace when real schedules provided)
+  [am, ch].forEach(b => {
     seedShift(b, 'Morning', '08:00', '14:00', 2);
     seedShift(b, 'Evening', '14:00', '22:00', 2);
     seedShift(b, 'Full Day', '09:00', '18:00', 1);
@@ -94,7 +115,7 @@ function seed() {
     });
   };
 
-  seedPeople(seed, 'Aisha Manager', ['Ahmed Ali','Fathimath Nasheeda','Hassan Rasheed','Mariyam Saeed','Ibrahim Waheed','Aminath Shifa']);
+  seedPeople(seed, 'Aisha Manager', ['Nafha','Jaxly','Nihaal','Jaish']);
   seedPeople(am,   'Hussain Manager', ['Mohamed Naseem','Zeenath Adam','Yoosuf Latheef','Aishath Rishfa','Ahmed Shameel']);
   seedPeople(ch,   'Layla Manager', ['Hawwa Ibrahim','Ali Hassan','Naazim Rasheed','Mariyam Lubna','Ismail Hameed']);
 
