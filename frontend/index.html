@@ -593,6 +593,85 @@ html { -webkit-text-size-adjust: 100%; }
   to   { opacity: 0; transform: translateY(8px) scale(0.96); }
 }
 
+/* Segmented control (Today / Tomorrow / Week) */
+.segmented {
+  display: inline-flex; padding: 3px; background: var(--bg-tint);
+  border: 1px solid var(--border); border-radius: 8px; gap: 2px;
+}
+.segmented button {
+  background: transparent; color: var(--muted); border: 0;
+  padding: 6px 14px; font-size: 12.5px; font-weight: 600;
+  border-radius: 6px; min-height: 0; box-shadow: none;
+  letter-spacing: 0;
+  transition: color 150ms var(--ease-out), background 150ms var(--ease-out);
+}
+.segmented button:hover { background: transparent; color: var(--text); transform: none; box-shadow: none; }
+.segmented button.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(15,23,42,0.06); }
+.segmented button.active:hover { background: var(--surface); }
+
+/* Live duty board */
+.duty-board { display: flex; flex-direction: column; gap: 14px; }
+.shift-block {
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface-2); overflow: hidden;
+  transition: border-color 200ms var(--ease-out);
+}
+.shift-block:hover { border-color: var(--border-strong); }
+.shift-block-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.shift-block-head .name { font-weight: 600; font-size: 14px; color: var(--text); }
+.shift-block-head .time { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: 500; }
+.shift-block-head .meta { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
+.duty-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  transition: background 150ms var(--ease-out);
+}
+.duty-row:last-child { border-bottom: 0; }
+.duty-row:hover { background: rgba(31,116,196,0.03); }
+.duty-row .who { display: flex; align-items: center; gap: 10px; }
+.duty-row .who .av { width: 26px; height: 26px; font-size: 10px; margin: 0; }
+.duty-row .status { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+
+/* Live pulse dot */
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bcc-green); position: relative;
+  flex-shrink: 0;
+}
+.live-dot::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  background: var(--bcc-green); opacity: 0.4;
+  animation: pulse-out 1.6s ease-out infinite;
+}
+@keyframes pulse-out {
+  0%   { transform: scale(0.6); opacity: 0.5; }
+  80%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.status.live { color: var(--bcc-green); }
+.status.upcoming { color: var(--bcc-blue); }
+.status.ended { color: var(--faint); }
+.status.dot {
+  width: 6px; height: 6px; border-radius: 50%; display: inline-block;
+}
+
+/* Empty shift block */
+.shift-empty {
+  padding: 20px 14px; text-align: center;
+  font-size: 12.5px; color: var(--muted); font-style: italic;
+}
+
+@media (max-width: 720px) {
+  .shift-block { background: var(--surface); }
+  .duty-row { padding: 10px 12px; }
+  .segmented button { padding: 7px 12px; font-size: 12px; }
+}
+
 /* Skeleton loader — perceived perf */
 @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 .skel {
@@ -947,6 +1026,178 @@ function SectionHead(eyebrow, title, desc) {
 }
 
 /* -------------------- Pages -------------------- */
+/* Live duty board state — persists between renders */
+const DBState = {
+  view: 'today',           // today | tomorrow | week
+  branchId: null,          // overrides selectedBranchId for super_admin only
+  refreshTimer: null,
+};
+
+function dayKey(d) { return new Date(d).toISOString().slice(0, 10); }
+function dutyStatus(duty, now = new Date()) {
+  const start = new Date(duty.start_at), end = new Date(duty.end_at);
+  if (now >= start && now <= end) return { kind: 'live', label: 'On shift' };
+  if (now < start) {
+    const mins = Math.round((start - now) / 60000);
+    if (mins < 60) return { kind: 'upcoming', label: `In ${mins}m` };
+    if (mins < 1440) return { kind: 'upcoming', label: `In ${Math.round(mins/60)}h` };
+    return { kind: 'upcoming', label: niceDate(duty.date).split(',')[0] };
+  }
+  return { kind: 'ended', label: 'Ended' };
+}
+
+async function renderLiveDutyBoard() {
+  const card = el('div', { class: 'card' });
+
+  // Resolve branch (super_admin can override; others locked to their branch)
+  const branchId = (State.user.role === 'super_admin'
+    ? (DBState.branchId || State.selectedBranchId || State.branches[0]?.id)
+    : State.user.branch_id);
+  if (DBState.branchId == null && State.user.role === 'super_admin') DBState.branchId = branchId;
+  const branch = State.branches.find(b => b.id === branchId);
+
+  // Header: title + branch picker (super_admin) + segmented day switcher
+  const head = el('div', { class: 'card-head' });
+  head.append(el('div', {}, el('h3', {}, 'Live duty board'), el('div', { class: 'small' }, branch?.name || '—')));
+
+  const right = el('div', { style: 'display:flex;gap:10px;align-items:center;flex-wrap:wrap' });
+  if (State.user.role === 'super_admin' && State.branches.length > 1) {
+    const sel = el('select', { style: 'max-width:170px;padding:6px 8px;font-size:12.5px;min-height:34px' });
+    State.branches.forEach(b => sel.append(el('option', { value: b.id, selected: b.id === branchId }, b.name)));
+    sel.onchange = () => { DBState.branchId = sel.value; refreshDutyBoard(); };
+    right.append(sel);
+  }
+  const seg = el('div', { class: 'segmented' });
+  ['today', 'tomorrow', 'week'].forEach(v => {
+    const b = el('button', { class: DBState.view === v ? 'active' : '' }, v[0].toUpperCase() + v.slice(1));
+    b.onclick = () => { DBState.view = v; refreshDutyBoard(); };
+    seg.append(b);
+  });
+  right.append(seg);
+  head.append(right);
+  card.append(head);
+
+  // Body container
+  const body = el('div', { class: 'duty-board', id: 'duty-board-body' });
+  card.append(body);
+
+  await populateDutyBoard(body, branchId);
+
+  // Auto-refresh every 45s for live feel
+  if (DBState.refreshTimer) clearInterval(DBState.refreshTimer);
+  DBState.refreshTimer = setInterval(() => {
+    const node = document.getElementById('duty-board-body');
+    if (!node) { clearInterval(DBState.refreshTimer); DBState.refreshTimer = null; return; }
+    populateDutyBoard(node, branchId);
+  }, 45000);
+
+  return card;
+}
+
+function refreshDutyBoard() {
+  // Re-render just the dashboard view in place
+  if (State.page === 'dashboard') render();
+}
+
+async function populateDutyBoard(host, branchId) {
+  host.innerHTML = '';
+  // Skeleton while loading
+  for (let i = 0; i < 2; i++) {
+    const s = el('div', { class: 'shift-block' });
+    s.append(el('div', { class: 'shift-block-head' }, el('span', { class: 'skel skel-line', style: 'width:100px;height:14px' })));
+    for (let j = 0; j < 2; j++) {
+      s.append(el('div', { class: 'duty-row' },
+        el('div', { class: 'who' }, el('span', { class: 'skel', style: 'width:26px;height:26px;border-radius:50%' }), el('span', { class: 'skel skel-line', style: 'width:120px' })),
+        el('span', { class: 'skel skel-line', style: 'width:60px' }),
+      ));
+    }
+    host.append(s);
+  }
+
+  try {
+    // Find the published roster covering "today" for the selected branch
+    const rosters = await api('/roster?branch_id=' + branchId);
+    const today = new Date();
+    const todayKey = dayKey(today);
+    const tomorrowKey = dayKey(new Date(today.getTime() + 86400000));
+
+    // Match roster whose week_start..week_start+7 covers today
+    const active = rosters.find(r => {
+      const ws = new Date(r.week_start);
+      const we = new Date(ws.getTime() + 7 * 86400000);
+      return today >= ws && today < we && (r.status === 'published' || r.status === 'locked');
+    });
+
+    if (!active) {
+      host.innerHTML = '';
+      host.append(el('div', { class: 'empty', style: 'padding:30px 16px' },
+        svgIcon('inbox'), el('div', {}, 'No published roster for this week'),
+        el('div', { class: 'small', style: 'margin-top:6px' }, 'Generate one in the Roster tab to see live duties here.')));
+      return;
+    }
+
+    const detail = await api('/roster/' + active.id);
+
+    // Filter duties by view
+    let duties = detail.duties;
+    if (DBState.view === 'today') duties = duties.filter(d => dayKey(d.date) === todayKey);
+    else if (DBState.view === 'tomorrow') duties = duties.filter(d => dayKey(d.date) === tomorrowKey);
+    // 'week' = all
+
+    // Group by shift type, then within each by day
+    const byShift = {};
+    duties.forEach(d => {
+      const k = d.shift_type.id;
+      if (!byShift[k]) byShift[k] = { name: d.shift_type.name, time: `${d.shift_type.start_time}–${d.shift_type.end_time}`, required: d.shift_type.required_staff || 1, items: [] };
+      byShift[k].items.push(d);
+    });
+
+    host.innerHTML = '';
+    if (!Object.keys(byShift).length) {
+      host.append(el('div', { class: 'empty', style: 'padding:30px 16px' },
+        svgIcon('inbox'), el('div', {}, DBState.view === 'today' ? 'Nobody scheduled today' : DBState.view === 'tomorrow' ? 'Nobody scheduled tomorrow' : 'No duties this week')));
+      return;
+    }
+
+    Object.values(byShift).forEach(sh => {
+      const block = el('div', { class: 'shift-block' });
+      const blockHead = el('div', { class: 'shift-block-head' },
+        el('div', {},
+          el('span', { class: 'name' }, sh.name),
+          el('span', { class: 'time' }, sh.time),
+        ),
+        el('span', { class: 'meta' }, `${sh.items.length}/${sh.required * (DBState.view === 'week' ? Math.ceil(sh.items.length / sh.required) || 1 : 1)} ${sh.items.length < sh.required ? '· UNDERSTAFFED' : ''}`),
+      );
+      block.append(blockHead);
+
+      sh.items.sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
+      sh.items.forEach(duty => {
+        const status = dutyStatus(duty);
+        const row = el('div', { class: 'duty-row' });
+        row.append(
+          el('div', { class: 'who' },
+            el('div', { class: 'av' }, initials(duty.staff?.full_name || '?')),
+            el('div', {},
+              el('div', { style: 'font-weight:500' }, duty.staff?.full_name || '—'),
+              DBState.view === 'week' ? el('div', { class: 'small' }, niceDate(duty.date)) : null,
+            ),
+          ),
+          el('div', { class: `status ${status.kind}` },
+            status.kind === 'live' ? el('span', { class: 'live-dot' }) : el('span', { class: 'status dot', style: `background: ${status.kind === 'upcoming' ? 'var(--bcc-blue)' : 'var(--faint)'}` }),
+            status.label,
+          ),
+        );
+        block.append(row);
+      });
+
+      host.append(block);
+    });
+  } catch (e) {
+    host.innerHTML = '';
+    host.append(el('div', { class: 'err' }, 'Failed to load: ' + e.message));
+  }
+}
+
 async function PageDashboard() {
   const root = el('div', { class: 'fade-in' });
   root.append(SectionHead('Overview', 'Today at a glance', 'Live metrics across branches and pending actions awaiting decision.'));
@@ -978,6 +1229,9 @@ async function PageDashboard() {
     grid.append(el('div', { class: 'card empty' }, 'Could not load dashboard: ' + e.message));
   }
   root.append(grid);
+
+  // Live duty board widget
+  root.append(await renderLiveDutyBoard());
 
   try {
     const rosters = await api('/roster' + (State.user.role === 'super_admin' ? '' : '?branch_id=' + State.user.branch_id));
