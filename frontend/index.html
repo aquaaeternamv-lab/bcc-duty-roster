@@ -2085,13 +2085,11 @@ async function PageMyRoster() {
     if (focus._countdownInterval) clearInterval(focus._countdownInterval);
     focus._countdownInterval = setInterval(updateCountdown, 30000);
 
+    /* Staff can ONLY request swaps. Clock in/out + roster edits are not their concern (HR owns attendance, managers own roster). */
     const actions = el('div', { class: 'duty-hero-actions' });
-    if (isNow) {
-      actions.append(el('button', { class: 'hero-btn primary', onclick: () => clockOut(focus.id) }, 'Clock out'));
-    } else {
-      actions.append(el('button', { class: 'hero-btn primary', onclick: () => clockIn(focus.id) }, 'Clock in'));
-    }
-    actions.append(el('button', { class: 'hero-btn ghost-on-accent', onclick: () => requestSwap(focus.id) }, 'Request swap'));
+    actions.append(
+      el('button', { class: 'hero-btn primary', onclick: () => requestSwap(focus.id) }, svgIcon('swap'), ' Request swap'),
+    );
 
     hero.append(
       el('div', { class: 'duty-hero-top' },
