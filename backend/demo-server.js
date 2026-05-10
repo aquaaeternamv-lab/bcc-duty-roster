@@ -119,6 +119,15 @@ function seed() {
   seedPeople(am,   'Hussain Manager', ['Mohamed Naseem','Zeenath Adam','Yoosuf Latheef','Aishath Rishfa','Ahmed Shameel']);
   seedPeople(ch,   'Layla Manager', ['Hawwa Ibrahim','Ali Hassan','Naazim Rasheed','Mariyam Lubna','Ismail Hameed']);
 
+  // HR — cross-branch read-only reporting access
+  db.users.push({
+    id: uid(), email: 'hr@bcc.local', name: 'HR Officer', role: 'hr',
+    branch_id: null, staff_id: null, active: true, password: 'bcc2026', created_at: now(),
+  });
+
+  // Seed a few sample approved + pending swaps for realistic HR report data
+  setTimeout(seedSampleSwaps, 0);
+
   // Generate sample published roster for current week per branch
   [seed, am, ch].forEach(b => generateRosterForBranch(b.id, mondayOf(new Date()), 'published'));
 
@@ -572,6 +581,215 @@ app.get('/api/audit', auth, need('super_admin','branch_manager'), (req, res) => 
   res.json(list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, parseInt(req.query.limit) || 200));
 });
 
+// REPORTS — HR + super_admin can pull cross-branch staff duty reports
+app.get('/api/reports/branches', auth, need('super_admin','hr'), (req, res) => {
+  // List branches available to choose for reporting (HR sees all)
+  res.json(db.branches.map(b => ({ id: b.id, name: b.name, slug: b.slug, accent: b.accent, logo: b.logo })));
+});
+
+// JSON preview of report data (lightweight)
+app.get('/api/reports/branch-staff-duty', auth, need('super_admin','hr'), (req, res) => {
+  const { branch_id, from, to } = req.query;
+  if (!branch_id || !from || !to) return res.status(400).json({ error: 'branch_id, from, to are required' });
+  const branch = db.branches.find(b => b.id === branch_id);
+  if (!branch) return res.status(404).json({ error: 'Branch not found' });
+  const fromDt = new Date(from), toDt = new Date(to);
+  const branchStaff = db.staff.filter(s => s.branch_id === branch_id && s.active);
+  const result = branchStaff.map(s => ({
+    staff: { id: s.id, employee_id: s.employee_id, full_name: s.full_name, designation: s.designation },
+    rows: buildStaffDutyRows(s.id, branch_id, fromDt, toDt),
+  }));
+  res.json({ branch: { id: branch.id, name: branch.name }, from, to, sheets: result });
+});
+
+// Excel download — one workbook per branch with one sheet per staff
+app.get('/api/reports/branch-staff-duty.xlsx', auth, need('super_admin','hr'), async (req, res) => {
+  const { branch_id, from, to } = req.query;
+  if (!branch_id || !from || !to) return res.status(400).send('branch_id, from, to are required');
+  const branch = db.branches.find(b => b.id === branch_id);
+  if (!branch) return res.status(404).send('Branch not found');
+  const fromDt = new Date(from), toDt = new Date(to);
+
+  let ExcelJS;
+  try { ExcelJS = require('exceljs'); }
+  catch (e) { return res.status(500).send('exceljs not installed on server'); }
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'BCC Duty & Roster';
+  wb.created = new Date();
+
+  // Cover sheet
+  const cover = wb.addWorksheet('Summary');
+  cover.columns = [
+    { header: 'Employee ID', key: 'eid', width: 14 },
+    { header: 'Name',        key: 'name', width: 26 },
+    { header: 'Designation', key: 'desig', width: 18 },
+    { header: 'Total duties',  key: 'total', width: 14 },
+    { header: 'Worked',        key: 'worked', width: 12 },
+    { header: 'Swapped out',   key: 'sout', width: 14 },
+    { header: 'Swapped in',    key: 'sin',  width: 14 },
+  ];
+  cover.getRow(1).font = { bold: true };
+  cover.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEFEF' } };
+
+  const branchStaff = db.staff.filter(s => s.branch_id === branch_id && s.active);
+  for (const s of branchStaff) {
+    const rows = buildStaffDutyRows(s.id, branch_id, fromDt, toDt);
+    const swappedOut = rows.filter(r => r.swap_status === 'approved' && r.original_assignee === s.full_name).length;
+    const swappedIn  = rows.filter(r => r.swap_status === 'approved' && r.worked_by === s.full_name && r.original_assignee !== s.full_name).length;
+    const worked = rows.filter(r => r.worked_by === s.full_name && r.swap_status !== 'pending').length;
+    cover.addRow({ eid: s.employee_id, name: s.full_name, desig: s.designation || '—', total: rows.length, worked, sout: swappedOut, sin: swappedIn });
+
+    // Per-staff sheet
+    const sheetName = (s.full_name || s.employee_id).slice(0, 28).replace(/[\\\/\?\*\[\]]/g, '_');
+    const ws = wb.addWorksheet(sheetName, { properties: { tabColor: { argb: argbFromHex(branch.accent || '#1f74c4') } } });
+    ws.mergeCells('A1', 'I1');
+    ws.getCell('A1').value = `${s.full_name}  ·  ${s.employee_id}  ·  ${branch.name}`;
+    ws.getCell('A1').font = { size: 14, bold: true };
+    ws.mergeCells('A2', 'I2');
+    ws.getCell('A2').value = `Period: ${from} → ${to}`;
+    ws.getCell('A2').font = { size: 11, color: { argb: 'FF6B7280' } };
+    ws.addRow([]);
+    ws.addRow(['Date','Day','Shift','Time','Original assignee','Actually worked by','Swap status','Approved by','Approval date']);
+    const headerRow = ws.lastRow;
+    headerRow.font = { bold: true };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFEFEF' } };
+    ws.columns = [
+      { width: 12 }, { width: 8 }, { width: 14 }, { width: 16 },
+      { width: 22 }, { width: 22 }, { width: 14 }, { width: 22 }, { width: 18 }
+    ];
+    for (const r of rows) {
+      const row = ws.addRow([
+        r.date, r.day, r.shift_name, r.time,
+        r.original_assignee, r.worked_by,
+        r.swap_status || 'no swap',
+        r.approved_by || '—',
+        r.approval_date || '—',
+      ]);
+      if (r.swap_status === 'approved') {
+        row.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF8E1' } }; });
+      } else if (r.swap_status === 'pending' || r.swap_status === 'pending_manager' || r.swap_status === 'pending_peer') {
+        row.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEAEA' } }; });
+      }
+    }
+    if (!rows.length) {
+      ws.addRow(['(no duties scheduled in this period)']).font = { italic: true, color: { argb: 'FF94A3B8' } };
+    }
+  }
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${branch.slug}_staff_duty_${from}_to_${to}.xlsx"`);
+  await wb.xlsx.write(res);
+  res.end();
+});
+
+function argbFromHex(hex) {
+  return 'FF' + (hex || '#1f74c4').replace('#','').toUpperCase().padStart(6,'0');
+}
+
+function seedSampleSwaps() {
+  // Inject 3 sample swaps per branch so HR report demonstrates real data
+  const branches = db.branches;
+  for (const b of branches) {
+    const branchStaff = db.staff.filter(s => s.branch_id === b.id);
+    if (branchStaff.length < 2) continue;
+    const branchDuties = db.duties.filter(d => {
+      const r = db.rosters.find(x => x.id === d.roster_id);
+      return r && r.branch_id === b.id;
+    });
+    if (branchDuties.length < 4) continue;
+    const mgr = db.users.find(u => u.role === 'branch_manager' && u.branch_id === b.id);
+
+    // Swap 1: APPROVED — staff[0] swapped with staff[1]
+    const d1 = branchDuties.find(d => d.staff_id === branchStaff[0].id);
+    if (d1) {
+      db.swaps.push({
+        id: uid(), from_duty_id: d1.id, to_duty_id: null,
+        requester_id: branchStaff[0].id, receiver_id: branchStaff[1].id,
+        status: 'approved', reason: 'Family commitment',
+        peer_at: new Date(Date.now() - 2*86400000).toISOString(),
+        manager_at: new Date(Date.now() - 86400000).toISOString(),
+        manager_id: mgr?.id || null,
+        rule_warnings: [],
+        created_at: new Date(Date.now() - 3*86400000).toISOString(),
+      });
+    }
+    // Swap 2: PENDING manager approval
+    const d2 = branchDuties.filter(d => d.staff_id === branchStaff[1].id)[1];
+    if (d2 && branchStaff[2]) {
+      db.swaps.push({
+        id: uid(), from_duty_id: d2.id, to_duty_id: null,
+        requester_id: branchStaff[1].id, receiver_id: branchStaff[2].id,
+        status: 'pending_manager', reason: 'Doctor appointment',
+        peer_at: new Date().toISOString(),
+        manager_at: null, manager_id: null,
+        rule_warnings: [],
+        created_at: new Date().toISOString(),
+      });
+    }
+    // Swap 3: APPROVED — staff[2] → staff[0]
+    const d3 = branchDuties.filter(d => d.staff_id === branchStaff[2]?.id)[0];
+    if (d3) {
+      db.swaps.push({
+        id: uid(), from_duty_id: d3.id, to_duty_id: null,
+        requester_id: branchStaff[2].id, receiver_id: branchStaff[0].id,
+        status: 'approved', reason: 'Personal',
+        peer_at: new Date(Date.now() - 86400000).toISOString(),
+        manager_at: new Date(Date.now() - 43200000).toISOString(),
+        manager_id: mgr?.id || null,
+        rule_warnings: [],
+        created_at: new Date(Date.now() - 86400000).toISOString(),
+      });
+    }
+  }
+}
+
+function buildStaffDutyRows(staffId, branchId, fromDt, toDt) {
+  const staff = db.staff.find(s => s.id === staffId);
+  // All duties originally assigned to this staff
+  const ownDuties = db.duties.filter(d => {
+    const dt = new Date(d.date);
+    return d.staff_id === staffId && dt >= fromDt && dt <= toDt;
+  });
+  // Plus any duties this staff worked via swap-in
+  const swappedInDuties = db.duties.filter(d => {
+    const dt = new Date(d.date);
+    if (dt < fromDt || dt > toDt) return null;
+    const sw = db.swaps.find(x => x.from_duty_id === d.id && x.status === 'approved' && x.receiver_id === staffId);
+    return sw && d.staff_id !== staffId;
+  });
+  const all = [...ownDuties, ...swappedInDuties].sort((a,b) => new Date(a.date) - new Date(b.date));
+  return all.map(d => {
+    const shift = db.shiftTypes.find(s => s.id === d.shift_type_id) || {};
+    const swap = db.swaps.find(x => x.from_duty_id === d.id);
+    const originalStaff = db.staff.find(s => s.id === d.staff_id);
+    const dt = new Date(d.date);
+    let worked_by = originalStaff?.full_name || '—';
+    let swap_status = null, approved_by = null, approval_date = null;
+    if (swap) {
+      swap_status = swap.status;
+      if (swap.status === 'approved') {
+        const receiver = db.staff.find(s => s.id === swap.receiver_id);
+        worked_by = receiver?.full_name || worked_by;
+        const mgr = db.users.find(u => u.id === swap.manager_id);
+        approved_by = mgr?.name || '—';
+        approval_date = swap.manager_at ? new Date(swap.manager_at).toISOString().slice(0,10) : '—';
+      }
+    }
+    return {
+      date: dt.toISOString().slice(0,10),
+      day: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()],
+      shift_name: shift.name || '—',
+      time: `${shift.start_time || ''}–${shift.end_time || ''}`,
+      original_assignee: originalStaff?.full_name || '—',
+      worked_by,
+      swap_status,
+      approved_by,
+      approval_date,
+    };
+  });
+}
+
 // HEALTH
 app.get('/health', (req, res) => res.json({ status: 'ok', mode: 'demo' }));
 
@@ -600,6 +818,7 @@ app.listen(PORT, () => {
   console.log('  ║  SEED manager:  seed-manager@bcc.local      ║');
   console.log('  ║  AM   manager:  authentic-maldives-manager@bcc.local ║');
   console.log('  ║  CH   manager:  creator-hub-manager@bcc.local ║');
+  console.log('  ║  HR officer:    hr@bcc.local                ║');
   console.log('  ║                                             ║');
   console.log('  ║  Staff:         seed-staff1@bcc.local       ║');
   console.log('  ║                 (or staff2..6)              ║');
