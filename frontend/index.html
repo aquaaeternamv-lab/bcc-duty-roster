@@ -686,6 +686,205 @@ html { -webkit-text-size-adjust: 100%; }
   .segmented button { padding: 7px 12px; font-size: 12px; }
 }
 
+/* ============ STAFF HERO (phone-first big visual) ============ */
+.staff-hello { padding: 4px 0 14px; }
+.staff-hello h1 { font-size: 28px; line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; margin-top: 4px; }
+.staff-hello .eyebrow { font-size: 11px; }
+
+.duty-hero {
+  position: relative;
+  border-radius: 20px;
+  padding: 24px 22px 20px;
+  margin-bottom: 18px;
+  color: #fff;
+  background: var(--branch-accent-grad, linear-gradient(135deg, #1f74c4 0%, #0f4f8c 100%));
+  box-shadow: 0 12px 30px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.06);
+  overflow: hidden;
+  isolation: isolate;
+}
+.duty-hero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,0.18) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(0,0,0,0.10) 0%, transparent 50%);
+  pointer-events: none;
+}
+.duty-hero.empty {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px dashed var(--border-strong);
+  box-shadow: none;
+}
+.duty-hero-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 14px;
+}
+.duty-hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.92);
+}
+.duty-hero.empty .duty-hero-eyebrow { color: var(--muted); }
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  display: inline-block;
+}
+.pulse-dot.live {
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  animation: pulse 1.6s ease-out infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55); }
+  70% { box-shadow: 0 0 0 12px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+.night-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,0.18); color: #fff;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+  backdrop-filter: blur(6px);
+}
+.duty-hero-time {
+  display: flex; align-items: baseline; gap: 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum';
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  margin: 4px 0 8px;
+}
+.duty-hero-time .big { font-size: 56px; }
+.duty-hero-time .sep {
+  font-size: 22px; font-weight: 600;
+  opacity: 0.55; letter-spacing: 0;
+  align-self: center;
+}
+.duty-hero-shift {
+  font-size: 17px; font-weight: 600;
+  color: rgba(255,255,255,0.92);
+  letter-spacing: -0.01em;
+  margin-top: 2px;
+}
+.duty-hero.empty .duty-hero-shift { color: var(--text); }
+.duty-hero-shift .sep-mid { margin: 0 8px; opacity: 0.5; }
+.duty-hero-count {
+  margin-top: 14px;
+  font-size: 14px; font-weight: 600;
+  color: rgba(255,255,255,0.95);
+  display: flex; align-items: baseline; gap: 6px;
+}
+.duty-hero-count .lab { opacity: 0.7; font-weight: 500; text-transform: lowercase; letter-spacing: 0.02em; }
+.duty-hero-count .val { font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.duty-hero-sub { margin-top: 4px; color: rgba(255,255,255,0.75); font-size: 13px; }
+.duty-hero.empty .duty-hero-sub { color: var(--muted); }
+.duty-hero-actions {
+  display: flex; gap: 10px; margin-top: 20px;
+  flex-wrap: wrap;
+}
+.hero-btn {
+  flex: 1 1 140px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer; border: 0;
+  transition: transform 100ms var(--ease-out), background 200ms var(--ease-out);
+}
+.hero-btn:active { transform: scale(0.97); }
+.hero-btn.primary {
+  background: #fff; color: var(--branch-accent);
+}
+.hero-btn.primary:hover { background: rgba(255,255,255,0.92); transform: none; }
+.hero-btn.ghost-on-accent {
+  background: rgba(255,255,255,0.16);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.22);
+}
+.hero-btn.ghost-on-accent:hover { background: rgba(255,255,255,0.26); transform: none; }
+.duty-hero-branch {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.18);
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+.duty-hero-branch img { filter: brightness(0) invert(1); opacity: 0.92; }
+
+/* Stats row */
+.staff-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin-bottom: 18px;
+}
+.staff-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 12px;
+  text-align: center;
+}
+.staff-stat .sv {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 26px; font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1;
+  color: var(--branch-accent);
+  font-variant-numeric: tabular-nums;
+}
+.staff-stat .sl {
+  margin-top: 6px;
+  font-size: 10.5px; font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* Shift list */
+.shift-list { display: flex; flex-direction: column; }
+.shift-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 150ms var(--ease-out);
+}
+.shift-row:last-child { border-bottom: 0; }
+.shift-row:hover { background: var(--surface-2); margin: 0 -14px; padding: 14px; border-radius: 8px; }
+.shift-row:active { transform: scale(0.99); }
+.shift-date {
+  flex: 0 0 50px;
+  text-align: center;
+  background: var(--branch-accent-soft);
+  border-radius: 10px;
+  padding: 8px 0;
+}
+.shift-date .dow {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--branch-accent);
+}
+.shift-date .day {
+  font-size: 22px; font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1; margin-top: 2px;
+  color: var(--branch-accent);
+  font-variant-numeric: tabular-nums;
+}
+.shift-info { flex: 1; min-width: 0; }
+.shift-info .sname { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.shift-info .stime { font-size: 13px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.shift-go { color: var(--faint); font-size: 22px; line-height: 1; padding-right: 4px; }
+
+/* Mobile — even bigger hero */
+@media (max-width: 720px) {
+  .staff-hello h1 { font-size: 26px; }
+  .duty-hero { padding: 22px 20px 18px; border-radius: 18px; }
+  .duty-hero-time .big { font-size: 48px; }
+  .staff-stat .sv { font-size: 22px; }
+  .hero-btn { padding: 13px 16px; font-size: 14.5px; min-height: 48px; }
+}
+
 /* Skeleton loader — perceived perf */
 @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 .skel {
@@ -998,6 +1197,44 @@ async function loadBootstrap() {
   }
   try { State.branches = await api('/branches'); } catch { State.branches = []; }
   if (!State.selectedBranchId && State.branches[0]) State.selectedBranchId = State.branches[0].id;
+  applyBranchTheme(activeBranch());
+}
+
+/* Active branch for theming — follows selectedBranchId for super_admin, branch_id for everyone else */
+function activeBranch() {
+  const id = State.user?.role === 'super_admin' ? State.selectedBranchId : State.user?.branch_id;
+  return State.branches.find(b => b.id === id) || State.branches[0] || null;
+}
+
+/* Apply a branch's accent colour to CSS vars — every component picks it up */
+function applyBranchTheme(branch) {
+  const root = document.documentElement;
+  const accent = branch?.accent || '#1f74c4';
+  const dark = shadeHex(accent, -0.18);
+  const soft = hexAlpha(accent, 0.10);
+  root.style.setProperty('--accent', accent);
+  root.style.setProperty('--accent-strong', dark);
+  root.style.setProperty('--accent-soft', soft);
+  root.style.setProperty('--branch-accent', accent);
+  root.style.setProperty('--branch-accent-soft', soft);
+  root.style.setProperty('--branch-accent-grad', `linear-gradient(135deg, ${accent} 0%, ${dark} 100%)`);
+  // theme-color meta for mobile chrome
+  let m = document.querySelector('meta[name="theme-color"]');
+  if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
+  m.content = accent;
+}
+function hexAlpha(hex, a) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0,2), 16), g = parseInt(h.slice(2,4), 16), b = parseInt(h.slice(4,6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+function shadeHex(hex, amt) {
+  const h = hex.replace('#', '');
+  let r = parseInt(h.slice(0,2), 16), g = parseInt(h.slice(2,4), 16), b = parseInt(h.slice(4,6), 16);
+  r = Math.max(0, Math.min(255, Math.round(r + r * amt)));
+  g = Math.max(0, Math.min(255, Math.round(g + g * amt)));
+  b = Math.max(0, Math.min(255, Math.round(b + b * amt)));
+  return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
 }
 
 /* -------------------- Header / Nav -------------------- */
@@ -1014,8 +1251,24 @@ const PAGE_LABELS = {
 
 function Header() {
   const h = el('header', { class: 'top' });
-  h.append(
-    el('div', { class: 'brand' },
+  const branch = activeBranch();
+  const isBranched = State.user && State.user.role !== 'super_admin' && branch;
+
+  // Branched users (staff/manager): show their branch identity prominently with BCC mark beside it
+  // Super admin: show BCC corporate identity
+  const brandBlock = el('div', { class: 'brand' });
+  if (isBranched) {
+    brandBlock.append(
+      BranchLogo(branch, 36),
+      el('div', { class: 'brand-text' },
+        el('span', { class: 'name', style: 'color:var(--branch-accent)' }, branch.name),
+        el('span', { class: 'tag' }, State.user.role === 'branch_manager' ? 'Branch Manager' : 'Staff portal'),
+      ),
+      el('div', { class: 'divider-v' }),
+      BccMark(22),
+    );
+  } else {
+    brandBlock.append(
       BccMark(34),
       el('div', { class: 'brand-text' },
         el('span', { class: 'name' }, 'BCC'),
@@ -1023,7 +1276,11 @@ function Header() {
       ),
       el('div', { class: 'divider-v' }),
       el('h1', {}, 'Duty & ', el('span', { class: 'accent' }, 'Roster')),
-    ),
+    );
+  }
+
+  h.append(
+    brandBlock,
     State.user ? el('div', { class: 'user' },
       el('span', { class: 'small' }, State.user.role.replace('_', ' ')),
       el('div', { class: 'av' }, initials(State.user.name)),
@@ -1774,29 +2031,145 @@ async function PageAudit() {
 
 async function PageMyRoster() {
   const root = el('div', { class: 'fade-in' });
-  root.append(SectionHead('Your week', `Hello, ${State.user.name.split(' ')[0]}`, 'Your upcoming shifts. Clock in when you arrive, request a swap if you need cover.'));
+  const branch = activeBranch();
   const list = await api('/roster/me/upcoming');
-  const card = el('div', { class: 'card' });
-  card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Upcoming duties'), el('span', { class: 'small' }, `${list.length} scheduled`)));
-  if (!list.length) card.append(el('div', { class: 'empty' }, svgIcon('inbox'), el('div', {}, 'Nothing scheduled. Check back after the next roster is published.')));
-  else {
-    const t = el('table');
-    t.append(el('thead', {}, el('tr', {}, el('th',{},'Date'), el('th',{},'Shift'), el('th',{},'Time'), el('th',{},''))));
-    const tb = el('tbody');
-    list.forEach(d => tb.append(el('tr', {},
-      el('td', {}, el('strong', {}, niceDate(d.date))),
-      el('td', {}, d.shift_type.name, d.is_night ? el('span', { style: 'margin-left:6px' }, svgIcon('moon')) : null),
-      el('td', {}, `${d.shift_type.start_time} – ${d.shift_type.end_time}`),
-      el('td', { style: 'text-align:right' },
-        el('button', { class: 'ghost', onclick: () => clockIn(d.id) }, 'Clock in'), ' ',
-        el('button', { class: 'ghost', onclick: () => clockOut(d.id) }, 'Clock out'), ' ',
-        el('button', { class: 'secondary', onclick: () => requestSwap(d.id) }, 'Request swap'),
+
+  // Find "now" duty (currently active) and "next" duty (next upcoming)
+  const now = new Date();
+  const todayStart = new Date(now.toDateString());
+  const enriched = list.map(d => ({
+    ...d,
+    _start: new Date(d.start_at),
+    _end: new Date(d.end_at),
+    _date: new Date(d.date),
+  }));
+  const onNow = enriched.find(d => d._start <= now && d._end >= now);
+  const next  = enriched.find(d => d._start > now);
+  const today = enriched.find(d => d._date.toDateString() === now.toDateString() && !onNow);
+  const focus = onNow || today || next;
+
+  // Greeting band
+  const hello = el('div', { class: 'staff-hello' },
+    el('div', { class: 'eyebrow', style: 'color:var(--branch-accent)' }, niceDate(now)),
+    el('h1', {}, `Hi, ${State.user.name.split(' ')[0]}`),
+  );
+  root.append(hello);
+
+  // HERO — biggest visual element, branded with branch accent
+  const hero = el('div', { class: 'duty-hero' });
+  if (focus) {
+    const isNow = !!onNow;
+    const startMs = focus._start.getTime();
+    const endMs = focus._end.getTime();
+    const nowMs = now.getTime();
+
+    let label, sub;
+    if (isNow) { label = 'On duty now'; sub = 'You\'re clocked in for this shift'; }
+    else if (focus._date.toDateString() === now.toDateString()) { label = 'Today\'s duty'; sub = 'Starts later today'; }
+    else { label = 'Next duty'; sub = nextDayLabel(focus._date); }
+
+    const startTimeStr = `${focus.shift_type.start_time}`;
+    const endTimeStr = `${focus.shift_type.end_time}`;
+    const countdownEl = el('div', { class: 'duty-hero-count' });
+    const updateCountdown = () => {
+      const t = Date.now();
+      let target, prefix;
+      if (t < startMs) { target = startMs - t; prefix = 'starts in'; }
+      else if (t <= endMs) { target = endMs - t; prefix = 'ends in'; }
+      else { countdownEl.textContent = ''; return; }
+      const h = Math.floor(target / 3.6e6);
+      const m = Math.floor((target % 3.6e6) / 6e4);
+      countdownEl.innerHTML = `<span class="lab">${prefix}</span> <span class="val">${h}h ${String(m).padStart(2,'0')}m</span>`;
+    };
+    updateCountdown();
+    if (focus._countdownInterval) clearInterval(focus._countdownInterval);
+    focus._countdownInterval = setInterval(updateCountdown, 30000);
+
+    const actions = el('div', { class: 'duty-hero-actions' });
+    if (isNow) {
+      actions.append(el('button', { class: 'hero-btn primary', onclick: () => clockOut(focus.id) }, 'Clock out'));
+    } else {
+      actions.append(el('button', { class: 'hero-btn primary', onclick: () => clockIn(focus.id) }, 'Clock in'));
+    }
+    actions.append(el('button', { class: 'hero-btn ghost-on-accent', onclick: () => requestSwap(focus.id) }, 'Request swap'));
+
+    hero.append(
+      el('div', { class: 'duty-hero-top' },
+        el('div', { class: 'duty-hero-eyebrow' },
+          el('span', { class: 'pulse-dot ' + (isNow ? 'live' : '') }),
+          label,
+        ),
+        focus.is_night ? el('span', { class: 'night-tag' }, svgIcon('moon'), ' Night') : null,
       ),
-    )));
-    t.append(tb); card.append(t);
+      el('div', { class: 'duty-hero-time' },
+        el('span', { class: 'big' }, startTimeStr),
+        el('span', { class: 'sep' }, '→'),
+        el('span', { class: 'big' }, endTimeStr),
+      ),
+      el('div', { class: 'duty-hero-shift' }, focus.shift_type.name, el('span', { class: 'sep-mid' }, '·'), niceDate(focus._date)),
+      countdownEl,
+      el('div', { class: 'duty-hero-sub' }, sub),
+      actions,
+      branch ? el('div', { class: 'duty-hero-branch' }, BranchLogo(branch, 22), branch.name) : null,
+    );
+  } else {
+    hero.classList.add('empty');
+    hero.append(
+      el('div', { class: 'duty-hero-eyebrow' }, 'No upcoming duty'),
+      el('div', { class: 'duty-hero-shift', style: 'margin-top:8px' }, 'Enjoy your day off'),
+      el('div', { class: 'duty-hero-sub' }, 'Your next roster will appear here as soon as it\'s published.'),
+    );
   }
-  root.append(card);
+  root.append(hero);
+
+  // Quick stats row (this week)
+  const weekStart = mondayOf(now);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const weekDuties = enriched.filter(d => d._date >= weekStart && d._date < weekEnd);
+  const weekHours = weekDuties.reduce((s, d) => s + (d._end - d._start) / 3.6e6, 0);
+  const stats = el('div', { class: 'staff-stats' });
+  stats.append(
+    el('div', { class: 'staff-stat' }, el('div', { class: 'sv' }, weekDuties.length), el('div', { class: 'sl' }, 'shifts this week')),
+    el('div', { class: 'staff-stat' }, el('div', { class: 'sv' }, weekHours.toFixed(0)), el('div', { class: 'sl' }, 'hours scheduled')),
+    el('div', { class: 'staff-stat' }, el('div', { class: 'sv' }, enriched.length), el('div', { class: 'sl' }, 'upcoming total')),
+  );
+  root.append(stats);
+
+  // Upcoming list (excluding the one in hero)
+  const rest = enriched.filter(d => d.id !== focus?.id).slice(0, 12);
+  if (rest.length) {
+    const card = el('div', { class: 'card' });
+    card.append(el('div', { class: 'card-head' }, el('h3', {}, 'Upcoming shifts'), el('span', { class: 'small' }, `${rest.length}`)));
+    const list = el('div', { class: 'shift-list' });
+    rest.forEach(d => {
+      const row = el('div', { class: 'shift-row', onclick: () => requestSwap(d.id) });
+      const dateChip = el('div', { class: 'shift-date' },
+        el('div', { class: 'dow' }, ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d._date.getDay()]),
+        el('div', { class: 'day' }, d._date.getDate()),
+      );
+      row.append(dateChip,
+        el('div', { class: 'shift-info' },
+          el('div', { class: 'sname' }, d.shift_type.name, d.is_night ? el('span', { style: 'margin-left:6px;color:var(--muted)' }, svgIcon('moon')) : null),
+          el('div', { class: 'stime' }, `${d.shift_type.start_time} – ${d.shift_type.end_time}`),
+        ),
+        el('div', { class: 'shift-go' }, '›'),
+      );
+      list.append(row);
+    });
+    card.append(list);
+    root.append(card);
+  }
+
   return root;
+}
+
+function nextDayLabel(d) {
+  const now = new Date();
+  const diffDays = Math.round((d - new Date(now.toDateString())) / 864e5);
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays < 7) return `In ${diffDays} days`;
+  return niceDate(d);
 }
 async function clockIn(duty_id) { try { const a = await api('/attendance/clock-in', { method: 'POST', body: { duty_id } }); showSuccess('Clocked in' + (a.late_minutes ? ` (${a.late_minutes}m late)` : '')); } catch(e){ showError(e.message);} }
 async function clockOut(duty_id) { try { const a = await api('/attendance/clock-out', { method: 'POST', body: { duty_id } }); showSuccess('Clocked out' + (a.overtime_hours ? ` · OT ${a.overtime_hours.toFixed(1)}h` : '')); } catch(e){ showError(e.message);} }
